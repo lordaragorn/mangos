@@ -4260,10 +4260,6 @@ void Aura::HandleAuraModDisarm(bool apply, bool Real)
 
     if(!apply && target->HasAuraType(GetModifier()->m_auraname))
         return;
-	
-	uint32 flags;
-	uint32 field;
-	WeaponAttackType attack_type;
 
     switch (GetModifier()->m_auraname)
     {
