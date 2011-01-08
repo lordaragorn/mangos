@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -983,7 +983,7 @@ uint32 ObjectMgr::GetModelForRace(uint32 sourceModelId, uint32 racemask)
 
         if (itr->second.creature_entry)
         {
-            const CreatureInfo *cInfo = GetCreatureTemplate(itr->second.creature_entry);
+            const CreatureInfo *cInfo = sObjectMgr.GetCreatureTemplate(itr->second.creature_entry);
             modelId = Creature::ChooseDisplayId(cInfo);
         }
         else
@@ -2764,15 +2764,26 @@ void ObjectMgr::LoadPlayerInfo()
             float  positionZ     = fields[6].GetFloat();
             float  orientation   = fields[7].GetFloat();
 
-            ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(current_race);
-            if(!rEntry || !((1 << (current_race-1)) & RACEMASK_ALL_PLAYABLE))
+            if(current_race >= MAX_RACES)
             {
                 sLog.outErrorDb("Wrong race %u in `playercreateinfo` table, ignoring.",current_race);
                 continue;
             }
 
-            ChrClassesEntry const* cEntry = sChrClassesStore.LookupEntry(current_class);
-            if(!cEntry || !((1 << (current_class-1)) & CLASSMASK_ALL_PLAYABLE))
+            ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(current_race);
+            if(!rEntry)
+            {
+                sLog.outErrorDb("Wrong race %u in `playercreateinfo` table, ignoring.",current_race);
+                continue;
+            }
+
+            if(current_class >= MAX_CLASSES)
+            {
+                sLog.outErrorDb("Wrong class %u in `playercreateinfo` table, ignoring.",current_class);
+                continue;
+            }
+
+            if(!sChrClassesStore.LookupEntry(current_class))
             {
                 sLog.outErrorDb("Wrong class %u in `playercreateinfo` table, ignoring.",current_class);
                 continue;
@@ -2839,17 +2850,14 @@ void ObjectMgr::LoadPlayerInfo()
                 Field* fields = result->Fetch();
 
                 uint32 current_race = fields[0].GetUInt32();
-                uint32 current_class = fields[1].GetUInt32();
-
-                ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(current_race);
-                if(!rEntry || !((1 << (current_race-1)) & RACEMASK_ALL_PLAYABLE))
+                if(current_race >= MAX_RACES)
                 {
                     sLog.outErrorDb("Wrong race %u in `playercreateinfo_item` table, ignoring.",current_race);
                     continue;
                 }
 
-                ChrClassesEntry const* cEntry = sChrClassesStore.LookupEntry(current_class);
-                if(!cEntry || !((1 << (current_class-1)) & CLASSMASK_ALL_PLAYABLE))
+                uint32 current_class = fields[1].GetUInt32();
+                if(current_class >= MAX_CLASSES)
                 {
                     sLog.outErrorDb("Wrong class %u in `playercreateinfo_item` table, ignoring.",current_class);
                     continue;
@@ -2911,17 +2919,14 @@ void ObjectMgr::LoadPlayerInfo()
                 Field* fields = result->Fetch();
 
                 uint32 current_race = fields[0].GetUInt32();
-                uint32 current_class = fields[1].GetUInt32();
-
-                ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(current_race);
-                if(!rEntry || !((1 << (current_race-1)) & RACEMASK_ALL_PLAYABLE))
+                if(current_race >= MAX_RACES)
                 {
                     sLog.outErrorDb("Wrong race %u in `playercreateinfo_spell` table, ignoring.",current_race);
                     continue;
                 }
 
-                ChrClassesEntry const* cEntry = sChrClassesStore.LookupEntry(current_class);
-                if(!cEntry || !((1 << (current_class-1)) & CLASSMASK_ALL_PLAYABLE))
+                uint32 current_class = fields[1].GetUInt32();
+                if(current_class >= MAX_CLASSES)
                 {
                     sLog.outErrorDb("Wrong class %u in `playercreateinfo_spell` table, ignoring.",current_class);
                     continue;
@@ -2973,17 +2978,14 @@ void ObjectMgr::LoadPlayerInfo()
                 Field* fields = result->Fetch();
 
                 uint32 current_race = fields[0].GetUInt32();
-                uint32 current_class = fields[1].GetUInt32();
-
-                ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(current_race);
-                if(!rEntry || !((1 << (current_race-1)) & RACEMASK_ALL_PLAYABLE))
+                if(current_race >= MAX_RACES)
                 {
                     sLog.outErrorDb("Wrong race %u in `playercreateinfo_action` table, ignoring.",current_race);
                     continue;
                 }
 
-                ChrClassesEntry const* cEntry = sChrClassesStore.LookupEntry(current_class);
-                if(!cEntry || !((1 << (current_class-1)) & CLASSMASK_ALL_PLAYABLE))
+                uint32 current_class = fields[1].GetUInt32();
+                if(current_class >= MAX_CLASSES)
                 {
                     sLog.outErrorDb("Wrong class %u in `playercreateinfo_action` table, ignoring.",current_class);
                     continue;
@@ -3134,17 +3136,14 @@ void ObjectMgr::LoadPlayerInfo()
             Field* fields = result->Fetch();
 
             uint32 current_race = fields[0].GetUInt32();
-            uint32 current_class = fields[1].GetUInt32();
-
-            ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(current_race);
-            if(!rEntry || !((1 << (current_race-1)) & RACEMASK_ALL_PLAYABLE))
+            if(current_race >= MAX_RACES)
             {
                 sLog.outErrorDb("Wrong race %u in `player_levelstats` table, ignoring.",current_race);
                 continue;
             }
 
-            ChrClassesEntry const* cEntry = sChrClassesStore.LookupEntry(current_class);
-            if(!cEntry || !((1 << (current_class-1)) & CLASSMASK_ALL_PLAYABLE))
+            uint32 current_class = fields[1].GetUInt32();
+            if(current_class >= MAX_CLASSES)
             {
                 sLog.outErrorDb("Wrong class %u in `player_levelstats` table, ignoring.",current_class);
                 continue;
@@ -3190,13 +3189,13 @@ void ObjectMgr::LoadPlayerInfo()
     for (int race = 0; race < MAX_RACES; ++race)
     {
         // skip nonexistent races
-        if(!((1 << (race-1)) & RACEMASK_ALL_PLAYABLE) || !sChrRacesStore.LookupEntry(race))
+        if(!sChrRacesStore.LookupEntry(race))
             continue;
 
         for (int class_ = 0; class_ < MAX_CLASSES; ++class_)
         {
             // skip nonexistent classes
-            if(!((1 << (class_-1)) & CLASSMASK_ALL_PLAYABLE) || !sChrClassesStore.LookupEntry(class_))
+            if(!sChrClassesStore.LookupEntry(class_))
                 continue;
 
             PlayerInfo* pInfo = &playerInfo[race][class_];
@@ -4826,7 +4825,7 @@ void ObjectMgr::LoadMailTemplate()
     sLog.outString( ">> Loaded %lu Mail template", (unsigned long)mMailTemplateMap.size() );
 }
 
-void ObjectMgr::LoadGossipTextLocales()
+void ObjectMgr::LoadNpcTextLocales()
 {
     mNpcTextLocaleMap.clear();                              // need for reload case
 
@@ -8185,7 +8184,7 @@ void ObjectMgr::LoadMailLevelRewards()
             continue;
         }
 
-        if(!GetCreatureTemplate(senderEntry))
+        if(!GetCreatureTemplateStore(senderEntry))
         {
             sLog.outErrorDb("Table `mail_level_reward` have nonexistent sender creature entry (%u) for level %u that invalid not include any player races, ignoring.",senderEntry,level);
             continue;
@@ -8439,7 +8438,7 @@ void ObjectMgr::LoadVendorTemplates()
         sLog.outErrorDb("Table `npc_vendor_template` has vendor template %u not used by any vendors ", *vItr);
 }
 
-void ObjectMgr::LoadNpcGossips()
+void ObjectMgr::LoadNpcTextId()
 {
 
     m_mCacheNpcTextIdMap.clear();
