@@ -1,4 +1,4 @@
-/* Copyright (C) 2006 - 2010 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+/* Copyright (C) 2006 - 2011 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -17,17 +17,285 @@
 /* ScriptData
 SDName: Sholazar_Basin
 SD%Complete: 100
-SDComment: Quest support: 12573
+SDComment: Quest support: 12573, 12570, 12580
 SDCategory: Sholazar Basin
 EndScriptData */
 
 /* ContentData
-mob_rjr_target
-npc_vekjik
+npc_injured_rainspeaker
+npc_mosswalker_victim
+npc_vekjik - TODO, can be moved to database (already exist)
 EndContentData */
 
 #include "precompiled.h"
 #include "escort_ai.h"
+
+/*######
+## npc_injured_rainspeaker
+######*/
+
+enum
+{
+    QUEST_FORTUNATE_MISUNDERSTAND       = 12570,
+
+    GOSSIP_ITEM_READY                   = -3000103,
+
+    SAY_ACCEPT                          = -1000605,
+    SAY_START                           = -1000606,
+    SAY_END_1                           = -1000607,
+    SAY_END_2                           = -1000608,
+    SAY_TRACKER                         = -1000609,
+
+    NPC_FRENZYHEART_TRACKER             = 28077,
+
+    SPELL_FEIGN_DEATH                   = 51329,
+    SPELL_ORACLE_INTRO                  = 51448,
+};
+
+// TODO: add, if faction change is expected.
+struct MANGOS_DLL_DECL npc_injured_rainspeakerAI : public npc_escortAI
+{
+    npc_injured_rainspeakerAI(Creature* pCreature) : npc_escortAI(pCreature) { Reset(); }
+
+    void Reset() { }
+
+    void JustStartedEscort()
+    {
+        if (Player* pPlayer = GetPlayerForEscort())
+            DoScriptText(SAY_START, m_creature, pPlayer);
+    }
+
+    void WaypointReached(uint32 uiPointId)
+    {
+        switch(uiPointId)
+        {
+            case 22:
+            {
+                if (Player* pPlayer = GetPlayerForEscort())
+                {
+                    DoScriptText(SAY_END_1, m_creature, pPlayer);
+                    // more likely m_creature->player, doesn't seem to work though.
+                    pPlayer->CastSpell(pPlayer, SPELL_ORACLE_INTRO, true);
+                }
+                break;
+            }
+            case 23:
+            {
+                DoScriptText(SAY_END_2, m_creature);
+
+                // location behind
+                float fAngle = m_creature->GetOrientation();
+                fAngle += M_PI_F;
+
+                float fX, fY, fZ;
+                m_creature->GetNearPoint(m_creature, fX, fY, fZ, 0.0f, 15.0f, fAngle);
+
+                m_creature->SummonCreature(NPC_FRENZYHEART_TRACKER, fX, fY, fZ, m_creature->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 30000);
+                break;
+            }
+        }
+    }
+
+    void JustSummoned(Creature* pSummoned)
+    {
+        DoScriptText(SAY_TRACKER, pSummoned);
+    }
+
+    void UpdateEscortAI(const uint32 uiDiff)
+    {
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_injured_rainspeaker(Creature* pCreature)
+{
+    return new npc_injured_rainspeakerAI(pCreature);
+}
+
+bool QuestAccept_npc_injured_rainspeaker(Player* pPlayer, Creature* pCreature, const Quest* pQuest)
+{
+    if (pQuest->GetQuestId() == QUEST_FORTUNATE_MISUNDERSTAND)
+    {
+        pCreature->RemoveAurasDueToSpell(SPELL_FEIGN_DEATH);
+        DoScriptText(SAY_ACCEPT, pCreature, pPlayer);
+
+        // Workaround, GossipHello/GossipSelect doesn't work well when object already has gossip from database
+        if (npc_injured_rainspeakerAI* pEscortAI = dynamic_cast<npc_injured_rainspeakerAI*>(pCreature->AI()))
+            pEscortAI->Start(true, pPlayer->GetGUID(), pQuest);
+    }
+
+    return false;
+}
+
+/*
+bool GossipHello_npc_injured_rainspeaker(Player* pPlayer, Creature* pCreature)
+{
+    if (pPlayer->GetQuestStatus(QUEST_FORTUNATE_MISUNDERSTAND) == QUEST_STATUS_INCOMPLETE)
+    {
+        pPlayer->ADD_GOSSIP_ITEM_ID(GOSSIP_ICON_CHAT, GOSSIP_ITEM_READY, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+        pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
+        return true;
+    }
+
+    return false;
+}
+
+bool GossipSelect_npc_injured_rainspeaker(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
+{
+    if (uiAction == GOSSIP_ACTION_INFO_DEF)
+    {
+        pPlayer->CLOSE_GOSSIP_MENU();
+
+        if (npc_injured_rainspeakerAI* pEscortAI = dynamic_cast<npc_injured_rainspeakerAI*>(pCreature->AI()))
+            pEscortAI->Start(true, pPlayer->GetGUID());
+    }
+
+    return false;
+}
+*/
+
+/*######
+## npc_mosswalker_victim
+######*/
+
+enum
+{
+    QUEST_MOSSWALKER_SAVIOR         = 12580,
+    SPELL_DEAD_SOLDIER              = 45801,                // not clear what this does, but looks like all have it
+    SPELL_MOSSWALKER_QUEST_CREDIT   = 52157,
+
+    GOSSIP_ITEM_PULSE               = -3000104,
+    TEXT_ID_INJURED                 = 13318,
+
+    EMOTE_PAIN                      = -1000610,
+
+    SAY_RESCUE_1                    = -1000611,
+    SAY_RESCUE_2                    = -1000612,
+    SAY_RESCUE_3                    = -1000613,
+    SAY_RESCUE_4                    = -1000614,
+
+    SAY_DIE_1                       = -1000615,
+    SAY_DIE_2                       = -1000616,
+    SAY_DIE_3                       = -1000617,
+    SAY_DIE_4                       = -1000618,
+    SAY_DIE_5                       = -1000619,
+    SAY_DIE_6                       = -1000620,
+};
+
+bool GossipHello_npc_mosswalker_victim(Player* pPlayer, Creature* pCreature)
+{
+    if (pPlayer->GetQuestStatus(QUEST_MOSSWALKER_SAVIOR) == QUEST_STATUS_INCOMPLETE)
+    {
+        // doesn't appear they always emote
+        if (urand(0,3) == 0)
+            DoScriptText(EMOTE_PAIN, pCreature);
+
+        pPlayer->ADD_GOSSIP_ITEM_ID(GOSSIP_ICON_CHAT, GOSSIP_ITEM_PULSE, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+    }
+
+    pPlayer->SEND_GOSSIP_MENU(TEXT_ID_INJURED, pCreature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_npc_mosswalker_victim(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
+{
+    if (uiAction == GOSSIP_ACTION_INFO_DEF)
+    {
+        pPlayer->CLOSE_GOSSIP_MENU();
+
+        // just to prevent double credit
+        if (pCreature->GetLootRecipient())
+            return true;
+        else
+            pCreature->SetLootRecipient(pPlayer);
+
+        if (urand(0,2))                                     // die
+        {
+            switch(urand(0,5))
+            {
+                case 0: DoScriptText(SAY_DIE_1, pCreature, pPlayer); break;
+                case 1: DoScriptText(SAY_DIE_2, pCreature, pPlayer); break;
+                case 2: DoScriptText(SAY_DIE_3, pCreature, pPlayer); break;
+                case 3: DoScriptText(SAY_DIE_4, pCreature, pPlayer); break;
+                case 4: DoScriptText(SAY_DIE_5, pCreature, pPlayer); break;
+                case 5: DoScriptText(SAY_DIE_6, pCreature, pPlayer); break;
+            }
+        }
+        else                                                // survive
+        {
+            switch(urand(0,3))
+            {
+                case 0: DoScriptText(SAY_RESCUE_1, pCreature, pPlayer); break;
+                case 1: DoScriptText(SAY_RESCUE_2, pCreature, pPlayer); break;
+                case 2: DoScriptText(SAY_RESCUE_3, pCreature, pPlayer); break;
+                case 3: DoScriptText(SAY_RESCUE_4, pCreature, pPlayer); break;
+            }
+
+            pCreature->CastSpell(pPlayer, SPELL_MOSSWALKER_QUEST_CREDIT, true);
+        }
+
+        // more details may apply, instead of just despawn
+        pCreature->ForcedDespawn(5000);
+    }
+    return true;
+}
+
+/*######
+## npc_vekjik - TODO, can be moved to database (already exist)
+######*/
+
+#define GOSSIP_VEKJIK_ITEM1 "Shaman Vekjik, I have spoken with the big-tongues and they desire peace. I have brought this offering on their behalf."
+#define GOSSIP_VEKJIK_ITEM2 "No no... I had no intentions of betraying your people. I was only defending myself. it was all a misunderstanding."
+
+enum
+{
+    GOSSIP_TEXTID_VEKJIK1       = 13137,
+    GOSSIP_TEXTID_VEKJIK2       = 13138,
+
+    SAY_TEXTID_VEKJIK1          = -1000208,
+
+    SPELL_FREANZYHEARTS_FURY    = 51469,
+
+    QUEST_MAKING_PEACE          = 12573
+};
+
+bool GossipHello_npc_vekjik(Player* pPlayer, Creature* pCreature)
+{
+    if (pCreature->isQuestGiver())
+        pPlayer->PrepareQuestMenu(pCreature->GetGUID());
+
+    if (pPlayer->GetQuestStatus(QUEST_MAKING_PEACE) == QUEST_STATUS_INCOMPLETE)
+    {
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_VEKJIK_ITEM1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+        pPlayer->SEND_GOSSIP_MENU(GOSSIP_TEXTID_VEKJIK1, pCreature->GetGUID());
+        return true;
+    }
+
+    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_npc_vekjik(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
+{
+    switch(uiAction)
+    {
+        case GOSSIP_ACTION_INFO_DEF+1:
+            pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_VEKJIK_ITEM2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+            pPlayer->SEND_GOSSIP_MENU(GOSSIP_TEXTID_VEKJIK2, pCreature->GetGUID());
+            break;
+        case GOSSIP_ACTION_INFO_DEF+2:
+            pPlayer->CLOSE_GOSSIP_MENU();
+            DoScriptText(SAY_TEXTID_VEKJIK1, pCreature, pPlayer);
+            pPlayer->AreaExploredOrEventHappens(QUEST_MAKING_PEACE);
+            pCreature->CastSpell(pPlayer, SPELL_FREANZYHEARTS_FURY, false);
+            break;
+    }
+
+    return true;
+}
 
 /*######
 ## mob_rjr_target
@@ -109,147 +377,9 @@ CreatureAI* GetAI_mob_rjr_target(Creature* pCreature)
     return new mob_rjr_targetAI(pCreature);
 }
 
-/*######
-## npc_vekjik
-######*/
-
-#define GOSSIP_VEKJIK_ITEM1 "Shaman Vekjik, I have spoken with the big-tongues and they desire peace. I have brought this offering on their behalf."
-#define GOSSIP_VEKJIK_ITEM2 "No no... I had no intentions of betraying your people. I was only defending myself. it was all a misunderstanding."
-
-enum
-{
-    GOSSIP_TEXTID_VEKJIK1       = 13137,
-    GOSSIP_TEXTID_VEKJIK2       = 13138,
-
-    SAY_TEXTID_VEKJIK1          = -1000208,
-
-    SPELL_FREANZYHEARTS_FURY    = 51469,
-
-    QUEST_MAKING_PEACE          = 12573
-};
-
-bool GossipHello_npc_vekjik(Player* pPlayer, Creature* pCreature)
-{
-    if (pCreature->isQuestGiver())
-        pPlayer->PrepareQuestMenu(pCreature->GetGUID());
-
-    if (pPlayer->GetQuestStatus(QUEST_MAKING_PEACE) == QUEST_STATUS_INCOMPLETE)
-    {
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_VEKJIK_ITEM1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
-        pPlayer->SEND_GOSSIP_MENU(GOSSIP_TEXTID_VEKJIK1, pCreature->GetGUID());
-        return true;
-    }
-
-    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
-    return true;
-}
-
-bool GossipSelect_npc_vekjik(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
-{
-    switch(uiAction)
-    {
-        case GOSSIP_ACTION_INFO_DEF+1:
-            pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_VEKJIK_ITEM2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
-            pPlayer->SEND_GOSSIP_MENU(GOSSIP_TEXTID_VEKJIK2, pCreature->GetGUID());
-            break;
-        case GOSSIP_ACTION_INFO_DEF+2:
-            pPlayer->CLOSE_GOSSIP_MENU();
-            DoScriptText(SAY_TEXTID_VEKJIK1, pCreature, pPlayer);
-            pPlayer->AreaExploredOrEventHappens(QUEST_MAKING_PEACE);
-            pCreature->CastSpell(pPlayer, SPELL_FREANZYHEARTS_FURY, false);
-            break;
-    }
-
-    return true;
-}
-
-/*######
-## npc_injured_oracle
-######*/
-
-enum InjuredOracle
-{
-    SAY_ESCORT_READY                    = -1999795,
-    SAY_ESCORT_START                    = -1999794,
-    SAY_ESCORT_FINISHED                 = -1999793,
-    SAY_AFTER_ESCORT                    = -1999792,
-
-    SPELL_QUEST_READY                   = 53807,
-    SPELL_ESCORT_START                  = 51341,
-
-    QUEST_FORTUNATE_MISUNDERSTANDINGS   = 12570
-};
-
-#define GOSSIP_INJURED_ORACLE "I am ready to travel to your village now."
-
-struct MANGOS_DLL_DECL npc_injured_oracleAI : public npc_escortAI
-{
-    npc_injured_oracleAI(Creature* pCreature) : npc_escortAI(pCreature) { Reset(); }
-
-    void Reset(){}
-    void WaypointReached(uint32 uiPointId) 
-    {
-        switch(uiPointId)
-        {
-            case 24:
-                DoScriptText(SAY_ESCORT_FINISHED, m_creature);
-                if (Player* pPlayer = GetPlayerForEscort())
-                    pPlayer->AreaExploredOrEventHappens(QUEST_FORTUNATE_MISUNDERSTANDINGS);
-                break;
-            case 25:
-                DoScriptText(SAY_AFTER_ESCORT, m_creature);
-                break;
-            default: break;
-        }
-    }
-};
-
-CreatureAI* GetAI_npc_injured_oracle(Creature* pCreature)
-{
-    return new npc_injured_oracleAI(pCreature);
-}
-
-bool GossipHello_npc_injured_oracle(Player* pPlayer, Creature* pCreature)
-{
-    if (pCreature->isQuestGiver())
-        pPlayer->PrepareQuestMenu(pCreature->GetGUID());
-
-    if (pPlayer->GetQuestStatus(QUEST_FORTUNATE_MISUNDERSTANDINGS) == QUEST_STATUS_INCOMPLETE)
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_INJURED_ORACLE, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
-
-    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
-    return true;
-}
-
-bool GossipSelect_npc_injured_oracle(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
-{
-    if (uiAction == GOSSIP_ACTION_INFO_DEF+1)
-    {
-        pPlayer->CLOSE_GOSSIP_MENU();
-        if (npc_injured_oracleAI* pEscortAI = dynamic_cast<npc_injured_oracleAI*>(pCreature->AI()))
-        {
-            pCreature->RemoveAllAuras();
-            pEscortAI->Start(false, pPlayer->GetGUID());
-            pCreature->setFaction(FACTION_ESCORT_N_NEUTRAL_ACTIVE);
-            DoScriptText(SAY_ESCORT_START, pCreature);
-            // dunno exactly what should this spell do
-            //pPlayer->CastSpell(pCreature, SPELL_ESCORT_START, true);
-        }
-    }
-    return true;
-}
-
-bool QuestAccept_fortunate_misunderstandings(Player* pPlayer, Creature* pCreature, const Quest* pQuest)
-{
-    if (pQuest->GetQuestId() == QUEST_FORTUNATE_MISUNDERSTANDINGS)
-    {
-        // dunno exactly what should this spell do
-        // pCreature->CastSpell(pCreature, SPELL_QUEST_READY, true);
-        
-        DoScriptText(SAY_ESCORT_READY, pCreature);
-    }
-    return true;
-}
+/*######################
+# Quest The Taste Test #
+######################*/ 
 
 enum TasteTest
 {
@@ -308,7 +438,7 @@ struct MANGOS_DLL_DECL mob_taste_testAI : public ScriptedAI
     }
 };
 
-bool EffectDummyCreature_mob_taste_test(Unit *pCaster, uint32 spellId, SpellEffectIndex effIndex, Creature *pCreatureTarget)
+bool EffectDummyNPC_mob_taste_test(Unit *pCaster, uint32 spellId, SpellEffectIndex effIndex, Creature *pCreatureTarget)
 {
     if (spellId == SPELL_OFFER_JUNGLE_PUNCH && effIndex == EFFECT_INDEX_1 && pCaster->GetTypeId() == TYPEID_PLAYER && pCreatureTarget)
     {
@@ -521,7 +651,7 @@ enum
     NPC_TIPSY_MCMANUS              =  28566,
 };
 
-bool GOHello_go_still_at_it_quest(Player* pPlayer, GameObject* pGo)
+bool GOUse_go_still_at_it_quest(Player* pPlayer, GameObject* pGo)
 {
     if (pPlayer->GetQuestStatus(QUEST_STILL_AT_IT) == QUEST_STATUS_INCOMPLETE)
     {
@@ -546,63 +676,6 @@ bool GOHello_go_still_at_it_quest(Player* pPlayer, GameObject* pGo)
 };
 
 /*#######################
-# mob_mosswalker_victim #
-########################*/ 
-enum
-{
-    QUEST_MOSSWALKER_SAVIOR          = 12580, 
-    SPELL_DESPAWN_SELF               = 43014,
-    NPC_MOSSWALKER_KILL_CREDIT       = 28644,
-    SAY_SAVED_1                      = -1770000,
-    SAY_SAVED_2                      = -1770001,
-    SAY_SAVED_3                      = -1770002,
-    SAY_SAVED_4                      = -1770003,
-    SAY_DIE_1                        = -1770004,
-    SAY_DIE_2                        = -1770005,
-    SAY_DIE_3                        = -1770006,
-    SAY_DIE_4                        = -1770007,
-    SAY_DIE_5                        = -1770008,
-};
-
-int32 SavedText[4] = {SAY_SAVED_1,SAY_SAVED_2,SAY_SAVED_3,SAY_SAVED_4};
-int32 DieText[5]   = {SAY_DIE_1,SAY_DIE_2,SAY_DIE_3,SAY_DIE_4,SAY_DIE_5};
-
-#define GOSSIP_EVENT_CHECK_PULSE "<Check for pulse.>"
-
-bool GossipHello_mob_mosswalker_victim(Player* pPlayer, Creature* pCreature)
-{
-    if (pCreature->isQuestGiver())
-        pPlayer->PrepareQuestMenu(pCreature->GetGUID());
-
-    if (pPlayer->GetQuestStatus(QUEST_MOSSWALKER_SAVIOR) == QUEST_STATUS_INCOMPLETE) 
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_EVENT_CHECK_PULSE, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
-
-    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature) , pCreature->GetGUID());
-    return true;
-}
-
-bool GossipSelect_mob_mosswalker_victim(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
-{
-    if (uiAction == GOSSIP_ACTION_INFO_DEF)
-    {
-        pPlayer->CLOSE_GOSSIP_MENU();
-
-        if(urand(0, 1))
-        {
-                DoScriptText(DieText[urand(0,4)], pCreature); 
-                pCreature->ForcedDespawn(2000);
-        }
-        else 
-        {
-                DoScriptText(SavedText[urand(0,3)], pCreature); 
-                pPlayer->KilledMonsterCredit(NPC_MOSSWALKER_KILL_CREDIT,pCreature->GetGUID());
-                pCreature->CastSpell(pCreature, SPELL_DESPAWN_SELF, true);
-        }
-    }
-    return true;
-}
-
-/*#######################
 # npc_artruis_heartless #
 #######################*/ 
 enum
@@ -615,6 +688,8 @@ enum
     GO_ARTRUISS_PYLACTERY           = 190777,
     SAY_AGGRO                       = -1780000,
     EMOTE_SHIELDED                  = -1780001,
+    NPC_ZEPIK                       = 28668,
+    NPC_JALOOT                      = 28667,
 
 };
 struct MANGOS_DLL_DECL npc_artruisAI : public ScriptedAI
@@ -646,15 +721,19 @@ struct MANGOS_DLL_DECL npc_artruisAI : public ScriptedAI
 
     void JustDied(Unit* pKiller)
     {
-        if(GameObject* pGo = GetClosestGameObjectWithEntry(m_creature, GO_ARTRUISS_PYLACTERY, 30.0f))
+        if(GameObject* pGo = GetClosestGameObjectWithEntry(m_creature, GO_ARTRUISS_PYLACTERY, 60.0f))
             {
-                pGo->SetRespawnTime(1*MINUTE);
+                pGo->SetRespawnTime(3*MINUTE);
                 pGo->Respawn();
             }
     }
     
     void UpdateAI (uint32 const uiDiff)
     {
+        if(m_creature->isInCombat() && !m_creature->getVictim())
+        {
+            EnterEvadeMode();
+        }
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
@@ -716,8 +795,6 @@ enum
     SPELL_J_SPARK_FRENZY            = 52964,
     FACTION_MONSTER                 = 14,
     FACTION_TO_RESTORE              = 250,
-    NPC_ZEPIK                       = 28668,
-    NPC_JALOOT                      = 28667,
     NPC_ARTRUIS_HEARTLESS           = 28659,
 };
 struct MANGOS_DLL_DECL npc_jaloot_zepikAI : public ScriptedAI
@@ -762,7 +839,7 @@ struct MANGOS_DLL_DECL npc_jaloot_zepikAI : public ScriptedAI
         {
             switch(m_creature->GetEntry())
             {
-                case NPC_ZEPIK: if(Creature* pJaloot = GetClosestCreatureWithEntry(m_creature, NPC_JALOOT, 30.0f))
+                case NPC_ZEPIK: if(Creature* pJaloot = GetClosestCreatureWithEntry(m_creature, NPC_JALOOT, 60.0f))
                                 {
                                     pJaloot->AddThreat(m_creature->getVictim(),9999.9f,false);
                                     pJaloot->Attack( m_creature->getVictim(),true);
@@ -783,6 +860,19 @@ struct MANGOS_DLL_DECL npc_jaloot_zepikAI : public ScriptedAI
     }
     void UpdateAI(const uint32 uiDiff)
     {
+        if(m_creature->isInCombat())
+        {
+            if (m_uiCheckArtruisTimer <= uiDiff)     
+             { 
+             if(Creature* pArtruis = GetClosestCreatureWithEntry(m_creature, NPC_ARTRUIS_HEARTLESS, 30.0f))
+             {
+                 if(!pArtruis->isAlive())
+                     EnterEvadeMode();
+             }
+                                
+        } else m_uiCheckArtruisTimer -= uiDiff;
+
+        }
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
@@ -797,16 +887,6 @@ struct MANGOS_DLL_DECL npc_jaloot_zepikAI : public ScriptedAI
                  break;
             default: break;
          }
-
-        if (m_uiCheckArtruisTimer <= uiDiff)     
-        { 
-             if(Creature* pArtruis = GetClosestCreatureWithEntry(m_creature, NPC_ARTRUIS_HEARTLESS, 30.0f))
-             {
-                 if(!pArtruis->isAlive())
-                     EnterEvadeMode();
-             }
-                                
-        } else m_uiCheckArtruisTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
 
@@ -851,7 +931,7 @@ struct MANGOS_DLL_DECL npc_jaloot_zepikAI : public ScriptedAI
                              {
                                   pJaloot->setFaction(FACTION_TO_RESTORE);
                                   
-                                  if(Creature* pArtruis = GetClosestCreatureWithEntry(pJaloot, NPC_ARTRUIS_HEARTLESS, 30.0f))
+                                  if(Creature* pArtruis = GetClosestCreatureWithEntry(pJaloot, NPC_ARTRUIS_HEARTLESS, 60.0f))
                                   {
                                       pJaloot->AddThreat(pArtruis, 999999.9f,true);
                                       pJaloot->Attack( pArtruis,true);
@@ -898,61 +978,62 @@ CreatureAI* GetAI_npc_jaloot_zepik(Creature* pCreature)
     return new npc_jaloot_zepikAI(pCreature);
 }
 
-
 void AddSC_sholazar_basin()
 {
-    Script *newscript;
+    Script* pNewScript;
 
-    newscript = new Script;
-    newscript->Name = "mob_taste_test";
-    newscript->GetAI = &GetAI_mob_taste_test;
-    newscript->pEffectDummyCreature = &EffectDummyCreature_mob_taste_test;
-    newscript->RegisterSelf();
+    pNewScript = new Script;
+    pNewScript->Name = "npc_injured_rainspeaker";
+    pNewScript->GetAI = &GetAI_npc_injured_rainspeaker;
+    pNewScript->pQuestAcceptNPC = &QuestAccept_npc_injured_rainspeaker;
+    //pNewScript->pGossipHello = &GossipHello_npc_injured_rainspeaker;
+    //pNewScript->pGossipSelect = &GossipSelect_npc_injured_rainspeaker;
+    pNewScript->RegisterSelf();
 
-    newscript = new Script;
-    newscript->Name = "mob_rjr_target";
-    newscript->GetAI = &GetAI_mob_rjr_target;
-    newscript->RegisterSelf();
+    pNewScript = new Script;
+    pNewScript->Name = "npc_mosswalker_victim";
+    pNewScript->pGossipHello = &GossipHello_npc_mosswalker_victim;
+    pNewScript->pGossipSelect = &GossipSelect_npc_mosswalker_victim;
+    pNewScript->RegisterSelf();
 
-    newscript = new Script;
-    newscript->Name = "npc_injured_oracle";
-    newscript->GetAI = &GetAI_npc_injured_oracle;
-    newscript->pQuestAccept = &QuestAccept_fortunate_misunderstandings;
-    newscript->pGossipHello = &GossipHello_npc_injured_oracle;
-    newscript->pGossipSelect = &GossipSelect_npc_injured_oracle;
-    newscript->RegisterSelf();
+    pNewScript = new Script;
+    pNewScript->Name = "npc_vekjik";
+    pNewScript->pGossipHello = &GossipHello_npc_vekjik;
+    pNewScript->pGossipSelect = &GossipSelect_npc_vekjik;
+    pNewScript->RegisterSelf();
 
-    newscript = new Script;
-    newscript->Name = "npc_vekjik";
-    newscript->pGossipHello = &GossipHello_npc_vekjik;
-    newscript->pGossipSelect = &GossipSelect_npc_vekjik;
-    newscript->RegisterSelf();
+    pNewScript = new Script;
+    pNewScript->Name = "mob_rjr_target";
+    pNewScript->GetAI = &GetAI_mob_rjr_target;
+    pNewScript->RegisterSelf();
 
-    newscript = new Script;
-    newscript->Name = "go_still_at_it_quest";
-    newscript->pGOHello = &GOHello_go_still_at_it_quest;
-    newscript->RegisterSelf();
+    pNewScript = new Script;
+    pNewScript->Name = "mob_taste_test";
+    pNewScript->GetAI = &GetAI_mob_taste_test;
+    pNewScript->pEffectDummyNPC = &EffectDummyNPC_mob_taste_test;
+    pNewScript->RegisterSelf();
 
-    newscript = new Script;
-    newscript->Name = "npc_tipsy_mcmanus";
-    newscript->GetAI = &GetAI_npc_tipsy_mcmanus;
-    newscript->pGossipHello = &GossipHello_npc_tipsy_mcmanus;
-    newscript->pGossipSelect = &GossipSelect_npc_tipsy_mcmanus;
-    newscript->RegisterSelf();
+    pNewScript = new Script;
+    pNewScript->Name = "go_still_at_it_quest";
+    pNewScript->pGOUse = &GOUse_go_still_at_it_quest;
+    pNewScript->RegisterSelf();
 
-    newscript = new Script;
-    newscript->Name = "mob_mosswalker_victim";
-    newscript->pGossipHello = &GossipHello_mob_mosswalker_victim;
-    newscript->pGossipSelect = &GossipSelect_mob_mosswalker_victim;
-    newscript->RegisterSelf();
+    pNewScript = new Script;
+    pNewScript->Name = "npc_tipsy_mcmanus";
+    pNewScript->GetAI = &GetAI_npc_tipsy_mcmanus;
+    pNewScript->pGossipHello = &GossipHello_npc_tipsy_mcmanus;
+    pNewScript->pGossipSelect = &GossipSelect_npc_tipsy_mcmanus;
+    pNewScript->RegisterSelf();
 
-    newscript = new Script;
-    newscript->Name = "npc_jaloot_zepik";
-    newscript->GetAI = &GetAI_npc_jaloot_zepik;
-    newscript->RegisterSelf();
+    pNewScript = new Script;
+    pNewScript->Name = "npc_jaloot_zepik";
+    pNewScript->GetAI = &GetAI_npc_jaloot_zepik;
+    pNewScript->RegisterSelf();
 
-    newscript = new Script;
-    newscript->Name = "npc_artruis";
-    newscript->GetAI = &GetAI_npc_artruis;
-    newscript->RegisterSelf(); 
+    pNewScript = new Script;
+    pNewScript->Name = "npc_artruis";
+    pNewScript->GetAI = &GetAI_npc_artruis;
+    pNewScript->RegisterSelf(); 
+
+
 }

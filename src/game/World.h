@@ -318,6 +318,9 @@ enum eConfigBoolValues
     CONFIG_BOOL_ALL_TAXI_PATHS,
     CONFIG_BOOL_DECLINED_NAMES_USED,
     CONFIG_BOOL_SKILL_MILLING,
+    CONFIG_BOOL_SKILL_FAIL_LOOT_FISHING,
+    CONFIG_BOOL_SKILL_FAIL_GAIN_FISHING,
+    CONFIG_BOOL_SKILL_FAIL_POSSIBLE_FISHINGPOOL,
     CONFIG_BOOL_BATTLEGROUND_CAST_DESERTER,
     CONFIG_BOOL_BATTLEGROUND_QUEUE_ANNOUNCER_START,
     CONFIG_BOOL_ARENA_AUTO_DISTRIBUTE_POINTS,
@@ -604,8 +607,8 @@ class World
         char const* GetCreatureEventAIVersion() { return m_CreatureEventAIVersion.c_str(); }
 
         //used Script version
-        void SetScriptsVersion(char const* version) { m_ScriptsVersion = version ? version : "unknown scripting library"; }
-        char const* GetScriptsVersion() { return m_ScriptsVersion.c_str(); }
+        /*void SetScriptsVersion(char const* version) { m_ScriptsVersion = version ? version : "unknown scripting library"; }
+        char const* GetScriptsVersion() { return m_ScriptsVersion.c_str(); }*/
         ACE_Thread_Mutex m_spellUpdateLock;
 
     protected:
@@ -725,7 +728,6 @@ class World
         //used versions
         std::string m_DBVersion;
         std::string m_CreatureEventAIVersion;
-        std::string m_ScriptsVersion;
 };
 
 extern uint32 realmID;

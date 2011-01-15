@@ -1,4 +1,4 @@
-/* Copyright (C) 2006 - 2010 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+/* Copyright (C) 2006 - 2011 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -223,7 +223,7 @@ enum
 
     NPC_SENTRY_BOT                      = 25753,
     SPELL_SUMMON_SENTRY_BOT             = 46068,
-
+    
     SPELL_GAVROK_RUNEBREAKER            = 47604,
     NPC_FREED_GIANT                     = 26783,
     NPC_WEAKENED_GIANT                  = 26872,
@@ -252,13 +252,13 @@ enum
     NPC_FREED_GREENGILL_SLAVE           = 25085,
     NPC_DARKSPINE_MYRMIDON              = 25060,
     NPC_DARKSPINE_SIREN                 = 25073,
-
+    
     // Quest "War Is Hell" 11270
     NPC_FALLEN_COMBATANT_1              = 24009,
     NPC_FALLEN_COMBATANT_2              = 24010,
     SPELL_FALLEN_COMBATAN_CREDIT        = 43297,
     SPELL_BURN_BODY                     = 42793,
-    
+
     // quest 14107
     SPELL_BLESSING_OF_PEACE             = 66719,
     NPC_FALLEN_HERO_SPIRIT              = 32149,
@@ -278,7 +278,7 @@ enum
     // quest 12813, by item 40587
     SPELL_DARKMENDER_TINCTURE           = 52741,
     SPELL_SUMMON_CORRUPTED_SCARLET      = 54415,
-    NPC_CORPSES_RISE_CREDIT_BUNNY       = 29398
+    NPC_CORPSES_RISE_CREDIT_BUNNY       = 29398,
 };
 
 bool EffectAuraDummy_spell_aura_dummy_npc(const Aura* pAura, bool bApply)
@@ -392,11 +392,11 @@ bool EffectAuraDummy_spell_aura_dummy_npc(const Aura* pAura, bool bApply)
             
             if (Unit* pCaster = pAura->GetCaster())
                 DoScriptText(SAY_SPECIMEN, pCaster);
-            
-            
-            if (pAura->GetTarget()->GetTypeId() == TYPEID_UNIT)
+
+            Unit* pTarget = pAura->GetTarget();
+            if (pTarget->GetTypeId() == TYPEID_UNIT)
             {
-                Creature* pCreature = (Creature*)pAura->GetTarget();
+                Creature* pCreature = (Creature*)pTarget;
 
                 if (pCreature->GetEntry() == NPC_NEXUS_DRAKE_HATCHLING)
                 {
@@ -408,56 +408,24 @@ bool EffectAuraDummy_spell_aura_dummy_npc(const Aura* pAura, bool bApply)
         }
         case SPELL_ENRAGE:
         {
-            if (pAura->GetTarget()->GetTypeId() != TYPEID_UNIT || !bApply)
+            if (!bApply || pAura->GetTarget()->GetTypeId() != TYPEID_UNIT)
                 return false;
 
-            if (Creature* pCreature = GetClosestCreatureWithEntry(pAura->GetTarget(), NPC_DARKSPINE_MYRMIDON, 25.0f))
+            Creature* pTarget = (Creature*)pAura->GetTarget();
+
+            if (Creature* pCreature = GetClosestCreatureWithEntry(pTarget, NPC_DARKSPINE_MYRMIDON, 25.0f))
             {
-                dynamic_cast<Creature*>(pAura->GetTarget())->AI()->AttackStart(pCreature);
+                pTarget->AI()->AttackStart(pCreature);
                 return true;
             }
 
-            if (Creature* pCreature = GetClosestCreatureWithEntry(pAura->GetTarget(), NPC_DARKSPINE_SIREN, 25.0f))
+            if (Creature* pCreature = GetClosestCreatureWithEntry(pTarget, NPC_DARKSPINE_SIREN, 25.0f))
             {
-                dynamic_cast<Creature*>(pAura->GetTarget())->AI()->AttackStart(pCreature);
+                pTarget->AI()->AttackStart(pCreature);
                 return true;
             }
 
             return false;
-        }
-        case SPELL_FUMPING:
-        {
-            if (pAura->GetEffIndex() == EFFECT_INDEX_2)
-            {
-                switch(urand(0,2))
-                {
-                    case 0:
-                    {
-                        ((Unit*)pAura->GetCaster())->CastSpell((Creature*)pAura->GetTarget(), SPELL_SUMMON_HAISHULUD, true);
-                        break;
-                    }
-                    case 1:
-                    {
-                        for (int i = 0; i<2; ++i)
-                        {
-                            if (Creature* pSandGnome = ((Unit*)pAura->GetCaster())->SummonCreature(NPC_SAND_GNOME, ((Creature*)pAura->GetTarget())->GetPositionX(), ((Creature*)pAura->GetTarget())->GetPositionY(), ((Creature*)pAura->GetTarget())->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                                pSandGnome->AI()->AttackStart((Unit*)pAura->GetCaster());
-                        }
-                        break;
-                    }
-                    case 2:
-                    {
-                        for (int i = 0; i<2; ++i)
-                        {
-                            if (Creature* pMatureBoneSifter = ((Unit*)pAura->GetCaster())->SummonCreature(NPC_MATURE_BONE_SIFTER, ((Creature*)pAura->GetTarget())->GetPositionX(), ((Creature*)pAura->GetTarget())->GetPositionY(), ((Creature*)pAura->GetTarget())->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                                pMatureBoneSifter->AI()->AttackStart((Unit*)pAura->GetCaster());
-                        }
-                        break;
-                    }
-                }
-                ((Creature*)pAura->GetTarget())->ForcedDespawn();
-            }
-            return true;
         }
     }
 
@@ -712,7 +680,7 @@ bool EffectDummyCreature_spell_dummy_npc(Unit* pCaster, uint32 uiSpellId, SpellE
         {
             if (uiEffIndex == EFFECT_INDEX_0)
             {
-                if (pCreatureTarget->isDead())
+                if (pCreatureTarget->IsCorpse())
                 {
                     uint32 newSpellId = 0;
 
@@ -772,8 +740,8 @@ bool EffectDummyCreature_spell_dummy_npc(Unit* pCaster, uint32 uiSpellId, SpellE
         {
             pCreatureTarget->CastSpell(pCaster, SPELL_GREENGILL_SLAVE_FREED, true);
 
-            if (pCreatureTarget->GetTypeId() == TYPEID_UNIT)
-                dynamic_cast<Creature*>(pCreatureTarget)->UpdateEntry(NPC_FREED_GREENGILL_SLAVE); // Freed Greengill Slave
+            // Freed Greengill Slave
+            pCreatureTarget->UpdateEntry(NPC_FREED_GREENGILL_SLAVE);
 
             pCreatureTarget->CastSpell(pCreatureTarget, SPELL_ENRAGE, true);
 
@@ -783,10 +751,42 @@ bool EffectDummyCreature_spell_dummy_npc(Unit* pCaster, uint32 uiSpellId, SpellE
         {
             if (pCreatureTarget->GetEntry() == NPC_FALLEN_COMBATANT_1 || pCreatureTarget->GetEntry() == NPC_FALLEN_COMBATANT_2)
                 pCreatureTarget->CastSpell(pCaster, SPELL_FALLEN_COMBATAN_CREDIT, true);
-
             return true;
         }
-
+        case SPELL_FUMPING:
+        {
+            if (uiEffIndex == EFFECT_INDEX_2)
+            {
+                switch(urand(0,2))
+                {
+                    case 0:
+                    {
+                        pCaster->CastSpell(pCreatureTarget, SPELL_SUMMON_HAISHULUD, true);
+                        break;
+                    }
+                    case 1:
+                    {
+                        for (int i = 0; i<2; ++i)
+                        {
+                            if (Creature* pSandGnome = pCaster->SummonCreature(NPC_SAND_GNOME, pCreatureTarget->GetPositionX(), pCreatureTarget->GetPositionY(), pCreatureTarget->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+                                pSandGnome->AI()->AttackStart(pCaster);
+                        }
+                        break;
+                    }
+                    case 2:
+                    {
+                        for (int i = 0; i<2; ++i)
+                        {
+                            if (Creature* pMatureBoneSifter = pCaster->SummonCreature(NPC_MATURE_BONE_SIFTER, pCreatureTarget->GetPositionX(), pCreatureTarget->GetPositionY(), pCreatureTarget->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+                                pMatureBoneSifter->AI()->AttackStart(pCaster);
+                        }
+                        break;
+                    }
+                }
+                pCreatureTarget->ForcedDespawn();
+            }
+            return true;
+        }
     }
 
     return false;
@@ -794,16 +794,16 @@ bool EffectDummyCreature_spell_dummy_npc(Unit* pCaster, uint32 uiSpellId, SpellE
 
 void AddSC_spell_scripts()
 {
-    Script *newscript;
+    Script* newscript;
 
     newscript = new Script;
     newscript->Name = "spell_dummy_go";
-    newscript->pEffectDummyGameObj = &EffectDummyGameObj_spell_dummy_go;
+    newscript->pEffectDummyGO = &EffectDummyGameObj_spell_dummy_go;
     newscript->RegisterSelf();
 
     newscript = new Script;
     newscript->Name = "spell_dummy_npc";
-    newscript->pEffectDummyCreature = &EffectDummyCreature_spell_dummy_npc;
+    newscript->pEffectDummyNPC = &EffectDummyCreature_spell_dummy_npc;
     newscript->pEffectAuraDummy = &EffectAuraDummy_spell_aura_dummy_npc;
     newscript->RegisterSelf();
 }

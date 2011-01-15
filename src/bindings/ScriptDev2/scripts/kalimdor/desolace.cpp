@@ -1,4 +1,4 @@
-/* Copyright (C) 2006 - 2010 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+/* Copyright (C) 2006 - 2011 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -118,7 +118,7 @@ CreatureAI* GetAI_npc_aged_dying_ancient_kodo(Creature* pCreature)
     return new npc_aged_dying_ancient_kodoAI(pCreature);
 }
 
-bool EffectDummyCreature_npc_aged_dying_ancient_kodo(Unit *pCaster, uint32 spellId, SpellEffectIndex effIndex, Creature *pCreatureTarget)
+bool EffectDummyNPC_npc_aged_dying_ancient_kodo(Unit *pCaster, uint32 spellId, SpellEffectIndex effIndex, Creature *pCreatureTarget)
 {
     //always check spellid and effectindex
     if (spellId == SPELL_KODO_KOMBO_ITEM && effIndex == EFFECT_INDEX_0)
@@ -174,7 +174,7 @@ enum
 
 };
 
-bool GOHello_go_hand_of_iruxos_crystal (Player* pPlayer, GameObject* pGo)
+bool GOUse_go_hand_of_iruxos_crystal (Player* pPlayer, GameObject* pGo)
 {
 	Creature* pDemon = GetClosestCreatureWithEntry(pPlayer, NPC_DEMON_SPIRIT, 25.0f);
 	
@@ -197,7 +197,7 @@ enum
     NPC_DEMON_PORTAL_GUARDIAN        = 11937
 
 };
-bool GOHello_go_demon_portal(Player* pPlayer, GameObject* pGo)
+bool GOUse_go_demon_portal(Player* pPlayer, GameObject* pGo)
 {
 	Creature* pCreature = GetClosestCreatureWithEntry(pPlayer, NPC_DEMON_PORTAL_GUARDIAN, 5.0f);
 
@@ -218,18 +218,18 @@ void AddSC_desolace()
     newscript = new Script;
     newscript->Name = "npc_aged_dying_ancient_kodo";
     newscript->GetAI = &GetAI_npc_aged_dying_ancient_kodo;
-    newscript->pEffectDummyCreature = &EffectDummyCreature_npc_aged_dying_ancient_kodo;
+    newscript->pEffectDummyNPC = &EffectDummyNPC_npc_aged_dying_ancient_kodo;
     newscript->pGossipHello = &GossipHello_npc_aged_dying_ancient_kodo;
     newscript->RegisterSelf();
     
     
     newscript = new Script;	
     newscript->Name = "go_hand_of_iruxos_crystal";
-    newscript->pGOHello = &GOHello_go_hand_of_iruxos_crystal;
+    newscript->pGOUse = &GOUse_go_hand_of_iruxos_crystal;
     newscript->RegisterSelf();
-	
-	newscript = new Script;	
+    
+    newscript = new Script;	
     newscript->Name = "go_demon_portal";
-    newscript->pGOHello = &GOHello_go_demon_portal;
+    newscript->pGOUse = &GOUse_go_demon_portal;
     newscript->RegisterSelf();
 }
