@@ -298,7 +298,7 @@ void Unit::Update( uint32 update_diff, uint32 p_time )
 {
     if(!IsInWorld())
         return;
-    
+
     /*if(p_time > m_AurasCheck)
     {
     m_AurasCheck = 2000;
@@ -6872,6 +6872,18 @@ uint32 Unit::SpellDamageBonusTaken(Unit *pCaster, SpellEntry const *spellProto, 
     // .. taken pct: dummy auras
     if (GetTypeId() == TYPEID_PLAYER)
     {
+        // non-stacking auras - Vigilance, Renewed Hope and (Greater) Blessing of Sanctuary
+        Aura *pAura = GetAura(50720, EFFECT_INDEX_0);  // Vigilance
+        if (!pAura)
+            pAura = GetDummyAura(63944);               // Renewed Hope
+        if (!pAura)
+            pAura = GetDummyAura(20911);               // Blessing of Sanctuary
+        if (!pAura)
+            pAura = GetDummyAura(25899);               // Greater Blessing of Sanctuary
+
+        if (pAura)
+            TakenTotalMod *= (float(pAura->GetModifier()->m_amount) + 100.0f) / 100.0f;
+
         //Cheat Death
         if (Aura *dummy = GetDummyAura(45182))
         {
@@ -7540,22 +7552,6 @@ bool Unit::IsImmuneToSpellEffect(SpellEntry const* spellInfo, SpellEffectIndex i
     return false;
 }
 
-bool Unit::IsDamageToThreatSpell(SpellEntry const * spellInfo) const
-{
-    if (!spellInfo)
-        return false;
-
-    uint32 family = spellInfo->SpellFamilyName;
-    uint64 flags = spellInfo->SpellFamilyFlags;
-
-    if ((family == 5 && flags == 256) ||                    //Searing Pain
-        (family == 6 && flags == 8192) ||                   //Mind Blast
-        (family == 11 && flags == 1048576))                 //Earth Shock
-        return true;
-
-    return false;
-}
-
 /**
  * Calculates caster part of melee damage bonuses,
  * also includes different bonuses dependent from target auras
@@ -7907,6 +7903,18 @@ uint32 Unit::MeleeDamageBonusTaken(Unit *pCaster, uint32 pdamage,WeaponAttackTyp
                 break;
         }
     }
+
+    // non-stacking auras - Vigilance, Renewed Hope and (Greater) Blessing of Sanctuary
+    Aura *pAura = GetAura(50720, EFFECT_INDEX_0);  // Vigilance
+    if (!pAura)
+        pAura = GetDummyAura(63944);               // Renewed Hope
+    if (!pAura)
+        pAura = GetDummyAura(20911);               // Blessing of Sanctuary
+    if (!pAura)
+        pAura = GetDummyAura(25899);               // Greater Blessing of Sanctuary
+
+    if (pAura)
+        TakenPercent *= (float(pAura->GetModifier()->m_amount) + 100.0f) / 100.0f;
 
     // final calculation
     // =================

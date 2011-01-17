@@ -183,14 +183,6 @@ void Map::RemoveFromGrid(Creature* obj, NGridType *grid, Cell const& cell)
     }
 }
 
-template<class T>
-void Map::DeleteFromWorld(T* obj)
-{
-    // Note: In case resurrectable corpse and pet its removed from global lists in own destructor
-    delete obj;
-}
-
-template<>
 void Map::DeleteFromWorld(Player* pl)
 {
     sObjectAccessor.RemoveObject(pl);
@@ -659,9 +651,11 @@ Map::Remove(T *obj, bool remove)
     if( remove )
     {
         // if option set then object already saved at this moment
-        if(!sWorld.getConfig(CONFIG_BOOL_SAVE_RESPAWN_TIME_IMMEDIATLY))
+        if(!sWorld.getConfig(CONFIG_BOOL_SAVE_RESPAWN_TIME_IMMEDIATELY))
             obj->SaveRespawnTime();
-        DeleteFromWorld(obj);
+
+        // Note: In case resurrectable corpse and pet its removed from global lists in own destructor
+        delete obj;
     }
 }
 
@@ -1405,7 +1399,9 @@ bool InstanceMap::Add(Player *player)
                     player->BindToInstance(GetInstanceSave(), false);
                 else
                     // cannot jump to a different instance without resetting it
-                    MANGOS_ASSERT(playerBind->save == GetInstanceSave());
+                    //MANGOS_ASSERT(playerBind->save == GetInstanceSave());
+                    if (!player->isGameMaster()) // Allow GMs jump from instance to another
+                        player->RepopAtGraveyard();
 
             }
         }
