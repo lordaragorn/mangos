@@ -708,6 +708,7 @@ bool IsPositiveEffect(uint32 spellId, SpellEffectIndex effIndex)
                 case SPELL_AURA_MOD_DODGE_PERCENT:
                 case SPELL_AURA_MOD_HEALING_PCT:
                 case SPELL_AURA_MOD_HEALING_DONE:
+                case SPELL_AURA_MOD_RESISTANCE_PCT:
                     if(spellproto->CalculateSimpleValue(effIndex) < 0)
                         return false;
                     break;
@@ -1194,7 +1195,7 @@ struct DoSpellProcEvent
 
         if (spe.procFlags == 0)
         {
-            if (spell->procFlags==0
+            if (spell->procFlags==0)
                 sLog.outErrorDb("Spell %u listed in `spell_proc_event` probally not triggered spell (no proc flags)", spell->Id);
         }
         else
@@ -1888,6 +1889,21 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                     (spellInfo_2->Id == 65684 && spellInfo_1->Id == 65686))
                     return true;
 
+                    // Male Shadowy Disguise
+                    if ((spellInfo_1->Id == 32756 && spellInfo_2->Id == 38080) ||
+                        (spellInfo_2->Id == 32756 && spellInfo_1->Id == 38080))
+                         return false;
+
+                    // Female Shadowy Disguise
+                    if ((spellInfo_1->Id == 32756 && spellInfo_2->Id == 38081) ||
+                        (spellInfo_2->Id == 32756 && spellInfo_1->Id == 38081))
+                         return false;
+
+                    // Cool Down (See PeriodicAuraTick())
+                    if ((spellInfo_1->Id == 52441 && spellInfo_2->Id == 52443) ||
+                        (spellInfo_2->Id == 52441 && spellInfo_1->Id == 52443))
+                        return false;
+
                 //Potent Fungus and Mini must remove each other (Amanitar encounter, Ahn'kahet)
                 if ((spellInfo_1->Id == 57055 && spellInfo_2->Id == 56648) ||
                     (spellInfo_2->Id == 57055 && spellInfo_1->Id == 56648))
@@ -1910,23 +1926,21 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 if ((spellInfo_1->Id == 42280 && spellInfo_2->Id == 42294) ||
                     (spellInfo_2->Id == 42280 && spellInfo_1->Id == 42294))
                     return false;
+                
+                // Vigilance and Damage Reduction (Vigilance triggered spell)
+                if (spellInfo_1->SpellIconID == 2834 && spellInfo_2->SpellIconID == 2834)
+                    return false;
 
-                    // Vigilance and Damage Reduction (Vigilance triggered spell)
-                    if (spellInfo_1->SpellIconID == 2834 && spellInfo_2->SpellIconID == 2834)
-                        return false;
-
-                    break;
-                }
-                case SPELLFAMILY_MAGE:
+                /*case SPELLFAMILY_MAGE:
                     // Arcane Intellect and Insight
                     if (spellInfo_2->SpellIconID == 125 && spellInfo_1->Id == 18820)
                         return false;
-                    break;
-                case SPELLFAMILY_WARRIOR:
+                    break;*/
+               /* case SPELLFAMILY_WARRIOR:
                 {
                     // Scroll of Protection and Defensive Stance (multi-family check)
                     if (spellInfo_1->SpellIconID == 276 && spellInfo_1->SpellVisual[0] == 196 && spellInfo_2->Id == 71)
-                        return false;
+                        return false;*/
 
                 // Ymiron - channel spirit to ymiron should stack with everything
                 if (spellInfo_1->Id == 48316 || spellInfo_2->Id == 48316)
@@ -2000,7 +2014,7 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
             if(spellInfo_1->SpellIconID == 1691 && spellInfo_2->SpellIconID == 1691)
                 return false;
             break;
-        case SPELLFAMILY_MAGE:
+         case SPELLFAMILY_MAGE:
             if( spellInfo_2->SpellFamilyName == SPELLFAMILY_MAGE )
             {
                 // Blizzard & Chilled (and some other stacked with blizzard spells
@@ -2025,6 +2039,10 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 // Fireball & Pyroblast (Dots)
                 if (((spellInfo_1->SpellFamilyFlags & UI64LIT(0x1)) && (spellInfo_2->SpellFamilyFlags & UI64LIT(0x400000))) ||
                     ((spellInfo_2->SpellFamilyFlags & UI64LIT(0x1)) && (spellInfo_1->SpellFamilyFlags & UI64LIT(0x400000))))
+                    return false;
+                
+                // Arcane Intellect and Insight
+                if (spellInfo_2->SpellIconID == 125 && spellInfo_1->Id == 18820)
                     return false;
             }
             break;
@@ -2084,9 +2102,18 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                     (spellInfo_2->SpellIconID == 456 && spellInfo_1->SpellIconID == 2006))
                     return false;
 
+                // Defensive/Berserker/Battle stance aura can not stack (needed for dummy auras)
+                if (((spellInfo_1->SpellFamilyFlags & UI64LIT(0x800000)) && (spellInfo_2->SpellFamilyFlags & UI64LIT(0x800000))) ||
+                    ((spellInfo_2->SpellFamilyFlags & UI64LIT(0x800000)) && (spellInfo_1->SpellFamilyFlags & UI64LIT(0x800000))))
+                    return true;
+
                 // Taste of Blood and Sudden Death
                 if( (spellInfo_1->Id == 52437 && spellInfo_2->Id == 60503) ||
                     (spellInfo_2->Id == 52437 && spellInfo_1->Id == 60503) )
+                    return false;
+                
+                // Scroll of Protection and Defensive Stance (multi-family check)
+                if (spellInfo_1->SpellIconID == 276 && spellInfo_1->SpellVisual[0] == 196 && spellInfo_2->Id == 71)
                     return false;
             }
             else if (spellInfo_2->SpellFamilyName == SPELLFAMILY_ROGUE)
