@@ -1128,8 +1128,11 @@ struct MANGOS_DLL_DECL npc_valkyrAI : public ScriptedAI
 
 		 if (pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 15.0f) )
          {
-			 uiPlayerGUID = pWho->GetGUID();
-             bEventStarted = true;           
+			 if(!bEventStarted)
+             {
+			    uiPlayerGUID = pWho->GetGUID();
+                bEventStarted = true;  
+             }           
          }
       }
      
@@ -1210,7 +1213,7 @@ struct MANGOS_DLL_DECL npc_bannerAI : public ScriptedAI
 				{										
 					if(uiWaveCounter == 4)
 					{
-						if(Player *pPlayer = m_creature->GetMap()->GetPlayer(m_creature->GetOwnerGUID()))
+						if(Player *pPlayer = m_creature->GetMap()->GetPlayer(m_creature->GetOwnerGuid()))
 						{
 							pPlayer->AreaExploredOrEventHappens(QUEST_DROP_IT_THEN_ROCK_IT);
                             m_creature->ForcedDespawn(1000);
@@ -1384,6 +1387,105 @@ CreatureAI* GetAI_npc_king_ymiron(Creature* pCreature)
 {
     return new npc_king_ymironAI(pCreature);
 }
+
+/*#####
+## go_gjalerbron_cage
+#####*/
+
+enum
+{
+    QUEST_OF_KEY_AND_CAGES_A    = 11231,
+    QUEST_OF_KEY_AND_CAGES_H    = 11265,
+    NPC_GJALERBON_PRISONER      = 24035,
+    SPELL_DESPAWN_SELF          = 43014
+};
+
+bool GOUse_go_gjalerbon_cage(Player* pPlayer, GameObject* pGo)
+{
+    if (pPlayer->GetQuestStatus(QUEST_OF_KEY_AND_CAGES_A) == QUEST_STATUS_INCOMPLETE || pPlayer->GetQuestStatus(QUEST_OF_KEY_AND_CAGES_H) == QUEST_STATUS_INCOMPLETE)
+    {
+            if(Creature *pPrisoner = GetClosestCreatureWithEntry(pPlayer, NPC_GJALERBON_PRISONER, 10))
+            {
+                pPlayer->KilledMonsterCredit(NPC_GJALERBON_PRISONER, pPrisoner->GetGUID());
+                pPrisoner->CastSpell(pPrisoner, SPELL_DESPAWN_SELF, false);
+            }
+    }
+    return false;
+};
+
+bool GOUse_go_large_gjalerbon_cage(Player* pPlayer, GameObject* pGo)
+{
+    if (pPlayer->GetQuestStatus(QUEST_OF_KEY_AND_CAGES_A) == QUEST_STATUS_INCOMPLETE || pPlayer->GetQuestStatus(QUEST_OF_KEY_AND_CAGES_H) == QUEST_STATUS_INCOMPLETE)
+    {
+        std::list<Creature*> lGjalerbronPrisoners;
+        GetCreatureListWithEntryInGrid(lGjalerbronPrisoners, pPlayer,  NPC_GJALERBON_PRISONER, 20.0f);
+        if (lGjalerbronPrisoners.empty())
+            return false;
+
+        for (std::list<Creature*>::iterator itr = lGjalerbronPrisoners.begin(); itr != lGjalerbronPrisoners.end(); ++itr)
+        {
+                pPlayer->KilledMonsterCredit(NPC_GJALERBON_PRISONER, (*itr)->GetGUID());
+                (*itr)->CastSpell(*itr, SPELL_DESPAWN_SELF, false);
+        }
+            
+    }
+    return false;
+};
+
+/*######
+## npc_feknut_bunny
+######*/
+
+enum
+{
+    NPC_DARKCLAW_BAT        = 23959,
+    SPELL_SUMMON_GUANO      = 43307
+
+};
+
+struct MANGOS_DLL_DECL npc_feknut_bunnyAI : public ScriptedAI
+{
+    npc_feknut_bunnyAI(Creature* pCreature) : ScriptedAI(pCreature) { Reset(); }
+    
+     
+	 uint64 uiCheckTimer;
+     bool bChecked;
+
+     void Reset()
+     {
+		 uiCheckTimer = 1000;
+         bChecked = false;
+     }
+         
+     void UpdateAI(const uint32 uiDiff)
+        {
+            if(!bChecked)
+            {
+                if (uiCheckTimer <= uiDiff)
+                {	
+                    if(Creature *pBat = GetClosestCreatureWithEntry(m_creature, NPC_DARKCLAW_BAT, 35.0f))
+                    {
+                        if(pBat->isAlive())
+                            pBat->CastSpell(m_creature, SPELL_SUMMON_GUANO, false);
+                        bChecked = true;
+                        if(Player *pPlayer = m_creature->GetMap()->GetPlayer(m_creature->GetOwnerGuid()))
+                        {
+                            pBat->Attack(pPlayer, true);
+                            pBat->AddThreat(pPlayer, 999.9f, true);
+                            pBat->GetMotionMaster()->MoveChase(pPlayer);
+
+                        }                            
+                    }        	   
+                } else uiCheckTimer -= uiDiff;
+            }			
+        }
+};
+
+CreatureAI* GetAI_npc_feknut_bunny(Creature* pCreature)
+{
+    return new npc_feknut_bunnyAI(pCreature);
+}
+
 void AddSC_howling_fjord()
 {
     Script* pNewScript;
@@ -1474,5 +1576,20 @@ void AddSC_howling_fjord()
     pNewScript = new Script;
     pNewScript->Name = "npc_king_ymiron";
     pNewScript->GetAI = &GetAI_npc_king_ymiron;
+    pNewScript->RegisterSelf();
+
+    pNewScript = new Script;
+    pNewScript->Name = "go_gjalerbon_cage";
+    pNewScript->pGOUse = &GOUse_go_gjalerbon_cage;
+    pNewScript->RegisterSelf();
+
+    pNewScript = new Script;
+    pNewScript->Name = "go_large_gjalerbon_cage";
+    pNewScript->pGOUse = &GOUse_go_large_gjalerbon_cage;
+    pNewScript->RegisterSelf();
+
+    pNewScript = new Script;
+    pNewScript->Name = "npc_feknut_bunny";
+    pNewScript->GetAI = &GetAI_npc_feknut_bunny;
     pNewScript->RegisterSelf();
 }
