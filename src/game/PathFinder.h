@@ -34,11 +34,11 @@ class Unit;
     } while(0)
 
 
-// 128*6.0f=768y  number_of_points*interval = max_path_len
+// 64*6.0f=384y  number_of_points*interval = max_path_len
 // this is way more than actual evade range
 // I think we can safely cut those down even more
-#define MAX_PATH_LENGTH         128
-#define MAX_POINT_PATH_LENGTH   128
+#define MAX_PATH_LENGTH         64
+#define MAX_POINT_PATH_LENGTH   64
 
 #define SMOOTH_PATH_STEP_SIZE   6.0f
 #define SMOOTH_PATH_SLOP        0.4f
@@ -80,8 +80,8 @@ class PathInfo
 
     private:
 
-        dtPolyRef      *m_pathPolyRefs;     // array of detour polygon references
-        uint32          m_polyLength;       // number of polygons in the path
+        dtPolyRef       m_pathPolyRefs[MAX_PATH_LENGTH];   // array of detour polygon references
+        uint32          m_polyLength;                      // number of polygons in the path
 
         PointPath       m_pathPoints;       // our actual (x,y,z) path to the target
         PathType        m_type;             // tells what kind of path this is
@@ -97,6 +97,8 @@ class PathInfo
         const dtNavMesh*        m_navMesh;          // the nav mesh
         const dtNavMeshQuery*   m_navMeshQuery;     // the nav mesh query used to find the path
 
+        dtQueryFilter m_filter;                     // use single filter for all movements, update it when needed
+
         inline void setNextPosition(PathNode point) { m_nextPosition = point; }
         inline void setStartPosition(PathNode point) { m_startPosition = point; }
         inline void setEndPosition(PathNode point) { m_actualEndPosition = point; m_endPosition = point; }
@@ -104,10 +106,7 @@ class PathInfo
 
         inline void clear()
         {
-            delete [] m_pathPolyRefs;
-            m_pathPolyRefs = NULL;
             m_polyLength = 0;
-
             m_pathPoints.clear();
         }
 
@@ -119,7 +118,8 @@ class PathInfo
         void BuildShortcut();
 
         NavTerrain getNavTerrain(float x, float y, float z);
-        dtQueryFilter createFilter();
+        void createFilter();
+        void updateFilter();
 
         // smooth path functions
         uint32 fixupCorridor(dtPolyRef* path, const uint32 npath, const uint32 maxPath,
@@ -129,7 +129,7 @@ class PathInfo
                             unsigned char& steerPosFlag, dtPolyRef& steerPosRef);
         dtStatus findSmoothPath(const float* startPos, const float* endPos,
                               const dtPolyRef* polyPath, const uint32 polyPathSize,
-                              float* smoothPath, int* straightPathCount, const uint32 smoothPathMaxSize);
+                              float* smoothPath, int* smoothPathSize, const uint32 smoothPathMaxSize);
 };
 
 inline bool inRangeYZX(const float* v1, const float* v2, const float r, const float h)
