@@ -26,14 +26,6 @@
 
 class Unit;
 
-#define PRINT_DEBUG_INFO    0
-#define PATH_DEBUG(...)             \
-    do {                            \
-        if (PRINT_DEBUG_INFO)       \
-            printf(__VA_ARGS__);    \
-    } while(0)
-
-
 // 64*6.0f=384y  number_of_points*interval = max_path_len
 // this is way more than actual evade range
 // I think we can safely cut those down even more
@@ -129,7 +121,8 @@ class PathInfo
                             unsigned char& steerPosFlag, dtPolyRef& steerPosRef);
         dtStatus findSmoothPath(const float* startPos, const float* endPos,
                               const dtPolyRef* polyPath, const uint32 polyPathSize,
-                              float* smoothPath, int* smoothPathSize, const uint32 smoothPathMaxSize);
+                              float* smoothPath, int* smoothPathSize, bool &usedOffmesh,
+                              const uint32 smoothPathMaxSize);
 };
 
 inline bool inRangeYZX(const float* v1, const float* v2, const float r, const float h)
