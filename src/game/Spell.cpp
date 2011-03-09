@@ -710,6 +710,9 @@ void Spell::prepareDataForTriggerSystem()
                 // Replenish Mana, item spell with triggered cases (Mana Agate, etc mana gems)
                 else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000010000000000))
                     m_canTrigger = true;
+                // Fingers of Frost: triggered by Frost/Ice Armor
+                else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000100000))
+                    m_canTrigger = true;
                 break;
             case SPELLFAMILY_WARLOCK:
                 // For Hellfire Effect / Rain of Fire / Seed of Corruption triggers need do it
@@ -3034,6 +3037,10 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case SPELL_EFFECT_SKILL:
                     targetUnitMap.push_back(m_caster);
                     break;
+                case SPELL_EFFECT_PERSISTENT_AREA_AURA:
+                    if(Unit* currentTarget = m_targets.getUnitTarget())
+                        m_targets.setDestination(currentTarget->GetPositionX(), currentTarget->GetPositionY(), currentTarget->GetPositionZ());
+                    break;
                 case SPELL_EFFECT_LEARN_PET_SPELL:
                     if (Pet* pet = m_caster->GetPet())
                         targetUnitMap.push_back(pet);
@@ -3978,12 +3985,6 @@ void Spell::finish(bool ok)
     // Stop Attack for some spells
     if( m_spellInfo->Attributes & SPELL_ATTR_STOP_ATTACK_TARGET )
         m_caster->AttackStop();
-
-    // hack for Fingers of Frost stacks remove
-    if(m_caster->HasAura(74396) && !m_IsTriggeredSpell && m_spellInfo->SpellFamilyName == SPELLFAMILY_MAGE)
-        if (SpellAuraHolder *holder = m_caster->GetSpellAuraHolder(74396))
-            if(holder->DropAuraCharge())
-                m_caster->RemoveSpellAuraHolder(holder);
 
     // For SPELL_AURA_IGNORE_UNIT_STATE charges
     // TODO: find way without this hack
@@ -6258,11 +6259,12 @@ SpellCastResult Spell::CheckCasterAuras() const
                 {
                     for (int32 i = 0; i < MAX_EFFECT_INDEX; ++i)
                     {
-                        if (GetSpellMechanicMask(itr->second->GetSpellProto(), i) & mechanic_immune)
+                        if (GetSpellMechanicMask(holder->GetSpellProto(), i) & mechanic_immune)
                             continue;
-                        if (GetSpellSchoolMask(itr->second->GetSpellProto()) & school_immune)
+                        if (GetSpellSchoolMask(holder->GetSpellProto()) & school_immune &&
+                            !(holder->GetSpellProto()->AttributesEx & SPELL_ATTR_EX_UNAFFECTED_BY_SCHOOL_IMMUNE))
                             continue;
-                        if ((1<<(itr->second->GetSpellProto()->Dispel)) & dispel_immune)
+                        if ((1<<(holder->GetSpellProto()->Dispel)) & dispel_immune)
                             continue;
                         Aura *aura = holder->GetAuraByEffectIndex(SpellEffectIndex(i));
                         if (!aura)
