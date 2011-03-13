@@ -3180,6 +3180,13 @@ SpellMissInfo Unit::MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell)
     modHitChance+=GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_INCREASES_SPELL_PCT_TO_HIT, schoolMask);
     // Chance hit from victim SPELL_AURA_MOD_ATTACKER_SPELL_HIT_CHANCE auras
     modHitChance+= pVictim->GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_ATTACKER_SPELL_HIT_CHANCE, schoolMask);
+
+    // Cloak of Shadows - should be ignored by Chaos Bolt
+    // handling of CoS aura is wrong? should be resist, not miss
+    if (spell->SpellFamilyName == SPELLFAMILY_WARLOCK && spell->SpellIconID == 3178)
+        if (Aura *aura = pVictim->GetAura(31224, EFFECT_INDEX_0))
+            modHitChance -= aura->GetModifier()->m_amount;
+
     // Reduce spell hit chance for Area of effect spells from victim SPELL_AURA_MOD_AOE_AVOIDANCE aura
     if (IsAreaOfEffectSpell(spell))
         modHitChance-=pVictim->GetTotalAuraModifier(SPELL_AURA_MOD_AOE_AVOIDANCE);
@@ -3225,6 +3232,10 @@ SpellMissInfo Unit::MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell)
 
     int32 deflect_chance = pVictim->GetTotalAuraModifier(SPELL_AURA_DEFLECT_SPELLS)*100;
     tmp+=deflect_chance;
+
+    // Chaos Bolt cannot be deflected
+    if (spell->SpellFamilyName == SPELLFAMILY_WARLOCK && spell->SpellIconID == 3178)
+        return SPELL_MISS_NONE;
 
     if (rand < tmp)
         return SPELL_MISS_DEFLECT;
@@ -6912,6 +6923,27 @@ uint32 Unit::SpellDamageBonusTaken(Unit *pCaster, SpellEntry const *spellProto, 
     // Mod damage from spell mechanic
     TakenTotalMod *= GetTotalAuraMultiplierByMiscValueForMask(SPELL_AURA_MOD_MECHANIC_DAMAGE_TAKEN_PERCENT,GetAllSpellMechanicMask(spellProto));
 
+    // Hack probably: these modifiers should be applied in a way that above functions would include their effects.
+    // Crypt Fever / Ebon Plaguebringer - increased diseases dmg
+    if (spellProto->Dispel == DISPEL_DISEASE)
+    {
+        Unit::AuraList const& scriptAuras = GetAurasByType(SPELL_AURA_LINKED);
+        for(Unit::AuraList::const_iterator i = scriptAuras.begin(); i != scriptAuras.end(); ++i)
+        {
+            if ((*i)->GetSpellProto()->SpellIconID == 264 || // Crypt Fever
+                (*i)->GetSpellProto()->SpellIconID == 1933)  // Ebon Plaguebringer
+                TakenTotalMod *= ((*i)->GetModifier()->m_amount + 100.0f) / 100.0f;
+        }
+    }
+    // Ebon Plaguebringer - increased spell damage taken
+    if (schoolMask & SPELL_SCHOOL_MASK_MAGIC)
+    {
+        Unit::AuraList const& dummyAuras = GetAurasByType(SPELL_AURA_DUMMY);
+        for(Unit::AuraList::const_iterator i = dummyAuras.begin(); i != dummyAuras.end(); ++i)
+            if ((*i)->GetSpellProto()->SpellIconID == 1933)
+                TakenTotalMod *= ((*i)->GetModifier()->m_amount + 100.0f) / 100.0f;
+    }
+
     // Mod damage taken from AoE spells
     if(IsAreaOfEffectSpell(spellProto))
     {
@@ -7148,7 +7180,7 @@ bool Unit::IsSpellCrit(Unit *pVictim, SpellEntry const *spellProto, SpellSchoolM
         case SPELL_DAMAGE_CLASS_RANGED:
         {
             if (pVictim)
-                crit_chance = GetUnitCriticalChance(attackType, pVictim);
+                crit_chance += GetUnitCriticalChance(attackType, pVictim);
 
             crit_chance+= GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_SPELL_CRIT_CHANCE_SCHOOL, schoolMask);
             break;
