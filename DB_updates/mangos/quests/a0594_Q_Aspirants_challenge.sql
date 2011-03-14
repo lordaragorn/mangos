@@ -4,7 +4,7 @@ UPDATE creature_template SET gossip_menu_id = 10340 WHERE entry = 33447;
 UPDATE creature_template SET mindmg = 3500, maxdmg = 4500, AIName = 'EventAI' WHERE entry = 33448;
 DELETE FROM gossip_menu_option WHERE menu_id = 10340;
 INSERT INTO gossip_menu_option VALUES
-(10340, 0, 0, 'I am ready to fight!', 1, 1, -1, 0, 50102, 0, 0, NULL, 9, 13679, 0, 1, 62853, 0, 0, 0, 0);
+(10340, 0, 0, 'I am ready to fight!', 1, 1, -1, 0, 50102, 0, 0, NULL, 9, 13679, 0, 0, 0, 0, 0, 0, 0);
 DELETE FROM gossip_scripts WHERE id = 50102;
 INSERT INTO gossip_scripts VALUES
 (50102, 1, 10, 33448, 120000, 0, 0, 0, 0, 0, 0, 0, 8596.984, 975.233, 547.554, 5.014466, 'Summon Argent Valiant');
