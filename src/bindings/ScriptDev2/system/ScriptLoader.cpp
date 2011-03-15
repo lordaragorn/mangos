@@ -6,6 +6,7 @@
 
 // battlegrounds
 extern void AddSC_battleground();
+extern void AddSC_battlegroundSA();
 
 // custom
 
@@ -500,6 +501,7 @@ void AddScripts()
 {
     // battlegrounds
     AddSC_battleground();
+    AddSC_battlegroundSA();
 
     // custom
 

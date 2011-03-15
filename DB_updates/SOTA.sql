@@ -380,3 +380,12 @@ INSERT INTO gameobject VALUES
 (200084, 300000, 607, 3, 1, 1803.93, -168.457, 60.549, 2.74522, 0, 0, 0.980426, 0.196889, 250000, 0, 1),
 (200085, 300000, 607, 3, 1, 1803.71, 118.601, 59.8234, 3.56313, 0, 0, 0.97787, -0.209212, 250000, 0, 1),
 (200086, 184719, 607, 3, 1, 1200.67, -67.87, 70.08, 6.28297, 0, 0, 0.000106724, -1, 250000, 0, 1);
+-- ScriptDev2
+UPDATE creature_template SET ScriptName='npc_sa_cannon' WHERE entry=27894;
+UPDATE creature_template SET ScriptName='npc_sa_demolisher' WHERE entry=28781;
+UPDATE creature_template SET ScriptName='npc_sa_vendor' WHERE entry IN (29260, 29262);
+UPDATE creature_template SET ScriptName='npc_sa_bomb' WHERE entry=50000;
+UPDATE gameobject_template SET ScriptName='go_sa_def_portal' WHERE entry=191575;
+
+
+
