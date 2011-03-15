@@ -29,7 +29,9 @@ const uint32 BG_SA_GateStatus[6] = {3849, 3623, 3620, 3614, 3617, 3638};
 const uint32 BG_SA_WorldStatusA[3] = {3630, 3629, 3628};
 const uint32 BG_SA_WorldStatusH[3] = {3631, 3627, 3626};
 const uint32 BG_IC_TEAM[BG_TEAMS_COUNT] = {84,83};
-
+// boats starting positions [x, y, z, o]
+const float BG_SA_BoatOneStartPos[4] = {2690.0f, -832.0f, 40.0f, 2.895f};
+const float BG_SA_BoatTwoStartPos[4] = {2582.0f, 990.0f, 40.0f, 0.807f};
 
 enum BG_SA_WorldStates
 {
@@ -87,12 +89,12 @@ enum BG_SA_Sounds
 
 enum BG_SA_GraveYardStatus
 {
-    BG_SA_GARVE_TYPE_CONTESTED = 1,
-    BG_SA_GARVE_STATUS_ALLY_CONTESTED = 1,
-    BG_SA_GARVE_STATUS_HORDE_CONTESTED = 2,
-    BG_SA_GARVE_TYPE_OCCUPIED = 3,
-    BG_SA_GARVE_STATUS_ALLY_OCCUPIED = 3,
-    BG_SA_GARVE_STATUS_HORDE_OCCUPIED = 4
+    BG_SA_GRAVE_TYPE_CONTESTED = 1,
+    BG_SA_GRAVE_STATUS_ALLY_CONTESTED = 1,
+    BG_SA_GRAVE_STATUS_HORDE_CONTESTED = 2,
+    BG_SA_GRAVE_TYPE_OCCUPIED = 3,
+    BG_SA_GRAVE_STATUS_ALLY_OCCUPIED = 3,
+    BG_SA_GRAVE_STATUS_HORDE_OCCUPIED = 4
 };
 
 // WorldSafeLocs ids for 5 gyd, and for ally, and horde starting location
@@ -101,10 +103,10 @@ const uint32 BG_SA_GraveyardIds[2] = {1349, 1350};
 
 enum BG_SA_GraveYard
 {
-    BG_SA_GARVE_E = 0,
-    BG_SA_GARVE_W = 1,
-    BG_SA_GARVE_S = 2,
-    BG_SA_GARVE_ERROR = 255
+    BG_SA_GRAVE_E = 0,
+    BG_SA_GRAVE_W = 1,
+    BG_SA_GRAVE_S = 2,
+    BG_SA_GRAVE_ERROR = 255
 };
 
 enum BG_SA_Timers
@@ -155,8 +157,7 @@ enum BG_SA_Events
     SA_EVENT_ADD_NPC = 7,
     SA_EVENT_ADD_GO = 8,
     SA_EVENT_ADD_VECH_E = 9,
-    SA_EVENT_ADD_VECH_W = 10,
-    SA_EVENT_OP_DOOR = 254
+    SA_EVENT_ADD_VECH_W = 10
 };
 
 enum BG_SA_Boats
@@ -225,10 +226,10 @@ static float BG_SA_START_LOCATIONS[7][4] = {
     { 2574.003662f, 981.261475f, 2.603424f, 0.807696f}
 };
 
-enum BG_SA_Phase
+enum BG_SA_Round
 {
-    SA_ROUND_ONE = 1,
-    SA_ROUND_TWO = 2,
+    BG_SA_ROUND_ONE = 1,
+    BG_SA_ROUND_TWO = 2,
 };
 
 struct BG_SA_RoundScore
@@ -252,7 +253,8 @@ class BattleGroundSA : public BattleGround
 
     public:
         BattleGroundSA();
-        ~BattleGroundSA();
+        ~BattleGroundSA(){};
+
         void Update(uint32 diff);
 
         /* inherited from BattlegroundClass */
@@ -260,14 +262,14 @@ class BattleGroundSA : public BattleGround
         virtual void StartingEventCloseDoors();
         virtual void StartingEventOpenDoors();
         virtual void EventPlayerDamageGO(Player *player, GameObject* target_obj, uint32 eventId);
-        virtual void EventSpawnGOSA(Player *owner, Creature* obj, float x, float y, float z);
+        virtual void EventSpawnGOSA(Player *owner, GameObject* obj, float x, float y, float z);
         virtual void FillInitialWorldStates(WorldPacket& data, uint32& count);
         virtual void EventPlayerClickedOnFlag(Player *source, GameObject* target_obj);
         virtual void HandleKillUnit(Creature* unit, Player* killer);
         virtual WorldSafeLocsEntry const* GetClosestGraveYard(Player* player);
         virtual void Reset();
 
-        Team GetDefender() const { return defender; }
+        Team GetDefender() const { return m_tDefender; }
         uint8 GetGydController(uint8 gyd) const { return m_Gyd[gyd]; }
         uint32 GetVehicleFaction(uint8 vehicleType) const { return GetCorrectFactionSA(vehicleType); }
         void RemovePlayer(Player *plr, ObjectGuid guid);
@@ -277,15 +279,9 @@ class BattleGroundSA : public BattleGround
         bool SetupBattleGround();
         void SendMessageSA(Player *player, uint32 type, uint32 name);
         void UpdateTimer();
-        void UpdatePhase();
-        uint32 Phase;
-        Team defender;
-        uint32 Round_timer;
-        uint32 TimeST2Round;
-        bool shipsStarted;
-        bool relicGateDestroyed;
-        uint32 shipsTimer;
-        bool isDemolisherDestroyed[2];
+        BG_SA_Round GetCurrentRound() { return m_rCurrentRound; }
+        void SetDemolisherDestroyed(Team team, bool destroyed) { m_bDemolisherDestroyed[team == HORDE ? 1 : 0] = destroyed; }
+        bool IsDemolisherDestroyed(Team team) { return m_bDemolisherDestroyed[team == HORDE ? 1 : 0]; }
         /* Scorekeeping */
         void UpdatePlayerScore(Player *Source, uint32 type, uint32 value);
         /* For boats */
@@ -303,19 +299,37 @@ class BattleGroundSA : public BattleGround
         void TeleportPlayerToCorrectLoc(Player *player, bool resetBattle = false);
 
     private:
+        Team m_tDefender;
+
+        void PrepareRound(); // setup all graveyards, gates, npcs and everything
+
         uint8 m_Gyd[BG_SA_GRY_MAX];
         uint8 m_prevGyd[BG_SA_GRY_MAX]; // used for performant wordlstate-updating
         uint32 m_GydTimers[BG_SA_GRY_MAX];
+
         BG_SA_RoundScore RoundScores[2];
-        /* Gameobject spawning/despawning */
+
+        // phases, timers etc.
+        BG_SA_Round m_rCurrentRound;
+        uint32 m_uiRoundElapsedTimer;
+        uint32 m_uiShipsTimer;
+
+        bool m_bShipsStarted;
+        bool m_bRelicGateDestroyed;
+        bool m_bDemolisherDestroyed[2];
+        bool m_bTimerEnabled;
+
+        // Gameobject spawning/despawning, worldstates stuff
+        void _GydOccupied(uint8 node,Team team);
         void _CreateBanner(uint8 node, uint8 type, uint8 teamIndex, bool delay);
+        void ToggleTimer();
+        void ResetWorldStates();
+
         BG_SA_BannerTimer m_BannerTimers[BG_SA_GRY_MAX];
+
+        // Graveyards and gates status
         int32 _GatesName(GameObject* obj);
         int32 _GydName(uint8 gyd);
         int32 GateStatus[BG_SA_GATE_MAX];
-        bool TimerEnabled;
-        void _GydOccupied(uint8 node,Team team);
-        void ToggleTimer();
-        void ResetWorldStates();
 };
 #endif
