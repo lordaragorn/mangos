@@ -1038,7 +1038,7 @@ struct MANGOS_DLL_DECL boss_malygosAI : public ScriptedAI
                 {
                     if (m_pInstance)
                         if (GameObject* pPlatform = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(GO_PLATFORM)))
-                            pPlatform->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK_11);
+                            pPlatform->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_DESTROYED);
 
                     m_creature->GetMap()->CreatureRelocation(m_creature, CENTER_X, CENTER_Y, FLOOR_Z + 150.0f, 0);
                     m_creature->SendMonsterMove(CENTER_X, CENTER_Y, FLOOR_Z + 150.0f, SPLINETYPE_NORMAL , m_creature->GetSplineFlags(), 3000);
@@ -1554,7 +1554,7 @@ struct MANGOS_DLL_DECL npc_alexstraszaAI : public ScriptedAI
 
                         // respawn platform, so that players can loot the chest
                         if (GameObject* pPlatform = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(GO_PLATFORM)))
-                            pPlatform->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK_11);
+                            pPlatform->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_DESTROYED);
                     }
                     break;
             }
