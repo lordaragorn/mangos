@@ -1,35 +1,6 @@
 #include "precompiled.h"
 #include "BattleGroundSA.h"
 #include "Vehicle.h"
- 
-#define Spell_Boom        52408
-
-struct MANGOS_DLL_DECL npc_sa_bombAI : public ScriptedAI
-{
-    npc_sa_bombAI(Creature* pCreature) : ScriptedAI(pCreature) { SetCombatMovement(false); Reset(); }
-    uint32 event_bomb;
-    float fx, fy, fz;
-    void Reset() { m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PASSIVE); event_bomb = 10000; }
-    void Aggro(Unit* who){}
-    void JustDied(Unit* Killer){ m_creature->ForcedDespawn(); }
-    void KilledUnit(Unit *victim){}
-    void UpdateAI(const uint32 diff)
-    {
-        if (event_bomb < diff)
-        {
-            m_creature->GetPosition(fx, fy, fz);
-            m_creature->CastSpell(m_creature, 34602, true);
-            m_creature->CastSpell(m_creature, 71495, true);
-            m_creature->CastSpell(fx, fy, fz, Spell_Boom, true, 0, 0, m_creature->GetCharmerGuid());
-            m_creature->ForcedDespawn();
-        } else event_bomb -= diff;
-    }
-};
- 
-CreatureAI* GetAI_npc_sa_bomb(Creature* pCreature)
-{
-    return new npc_sa_bombAI (pCreature);
-}
 
 struct MANGOS_DLL_DECL npc_sa_demolisherAI : public ScriptedAI
 {
@@ -61,17 +32,6 @@ struct MANGOS_DLL_DECL npc_sa_demolisherAI : public ScriptedAI
         }
     }
 
-    bool mustDespawn(BattleGround *bg)
-    {
-        if (bg->GetStatus() == STATUS_WAIT_JOIN && ((BattleGroundSA*)bg)->GetDefender() == ALLIANCE)
-        {
-            float x = m_creature->GetPositionX();
-            if (x < 1400.0f)
-                return true;
-        }
-        return false;
-    }
- 
     void UpdateAI(const uint32 diff)
     {
         if (!m_creature->isCharmed())
@@ -101,7 +61,7 @@ struct MANGOS_DLL_DECL npc_sa_demolisherAI : public ScriptedAI
             if (bg)
             {
                 m_creature->setFaction(bg->GetVehicleFaction(VEHICLE_SA_DEMOLISHER));
-                if (mustDespawn(bg))
+                if (bg->GetStatus() == STATUS_WAIT_JOIN)
                     m_creature->ForcedDespawn();
             }
         }
@@ -111,13 +71,6 @@ struct MANGOS_DLL_DECL npc_sa_demolisherAI : public ScriptedAI
 CreatureAI* GetAI_npc_sa_demolisher(Creature* pCreature)
 {
     return new npc_sa_demolisherAI(pCreature);
-}
- 
-bool GossipHello_npc_sa_demolisher(Player* pPlayer, Creature* pCreature)
-{
-     pPlayer->CLOSE_GOSSIP_MENU();
-     ((npc_sa_demolisherAI*)pCreature->AI())->StartEvent(pPlayer);
-         return true;
 }
  
 struct MANGOS_DLL_DECL npc_sa_cannonAI : public ScriptedAI
@@ -180,7 +133,11 @@ struct MANGOS_DLL_DECL npc_sa_cannonAI : public ScriptedAI
             }
 
             if (bg)
+            {
                 m_creature->setFaction(bg->GetVehicleFaction(VEHICLE_SA_CANNON));
+                if (bg->GetStatus() == STATUS_WAIT_JOIN)
+                    m_creature->ForcedDespawn();
+            }
         }
     }
 };
@@ -189,14 +146,7 @@ CreatureAI* GetAI_npc_sa_cannon(Creature* pCreature)
 {
     return new npc_sa_cannonAI(pCreature);
 }
- 
-bool GossipHello_npc_sa_cannon(Player* pPlayer, Creature* pCreature)
-{
-     pPlayer->CLOSE_GOSSIP_MENU();
-     ((npc_sa_cannonAI*)pCreature->AI())->StartEvent(pPlayer);
-         return true;
-}
- 
+
 #define GOSSIP_START_EVENT_1        "Start building the Demolisher."
 #define GOSSIP_START_EVENT_2        "You have nothing to do now!"
 #define GOSSIP_EVENT_STARTED        "Im working on it."
@@ -347,7 +297,7 @@ bool GOHello_go_sa_def_portal(Player* pPlayer, GameObject* pGo)
                         return true;
                     }
                 }
-            } else pPlayer->MonsterSay("No puedes usarlo",LANG_UNIVERSAL, pPlayer);
+            }
         }
     }
     return false;
