@@ -271,18 +271,18 @@ INSERT INTO gameobject_battleground VALUES
 (200081, 6, 1),
 (200082, 6, 1),
 (200083, 6, 1),
-(200041, 9, 0), -- seaforium east graveyard alliance
-(200042, 9, 0),
-(200043, 9, 0),
-(200049, 9, 0), -- seaforium east graveyard horde
-(200050, 9, 0),
-(200051, 9, 0),
-(200044, 10, 0), -- seaforium west graveyard horde
-(200045, 10, 0),
-(200046, 10, 0),
-(200036, 10, 0), -- seaforium west graveyard alliance
-(200037, 10, 0),
-(200038, 10, 0);
+(200044, 9, 0), -- seaforium east graveyard alliance
+(200045, 9, 0),
+(200046, 9, 0),
+(200036, 9, 0), -- seaforium east graveyard horde
+(200037, 9, 0),
+(200038, 9, 0),
+(200041, 10, 0), -- seaforium west graveyard horde
+(200042, 10, 0),
+(200043, 10, 0),
+(200049, 10, 0), -- seaforium west graveyard alliance
+(200050, 10, 0),
+(200051, 10, 0);
 
 -- Defender's Portal
 DELETE FROM gameobject WHERE guid IN (200029, 200030, 200031, 200032, 200033, 200034, 200035);
