@@ -87,7 +87,7 @@ class Vehicle : public Creature
         void RemoveFromWorld();
 
         void Die();
-        bool Create (uint32 guidlow, CreatureCreatePos &cPos, uint32 Entry, uint32 vehicleId, Team team, const CreatureData *data = NULL);
+        bool Create (uint32 guidlow, CreatureCreatePos& cPos, uint32 Entry, uint32 vehicleId, Team team, const CreatureData *data = NULL);
         void Respawn();
 
         void SetDeathState(DeathState s);                   // overwrite virtual Creature::SetDeathState and Unit::SetDeathState
