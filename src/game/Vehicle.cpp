@@ -354,10 +354,10 @@ void Vehicle::RegeneratePower(Powers power)
     ModifyPower(power, (int32)addvalue);
 }
 
-bool Vehicle::Create(uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, uint32 vehicleId, Team team, const CreatureData *data)
+bool Vehicle::Create(uint32 guidlow, CreatureCreatePos& cPos, uint32 Entry, uint32 vehicleId, Team team, const CreatureData *data)
 {
-    SetMap(map);
-    SetPhaseMask(phaseMask,false);
+    SetMap(cPos.GetMap());
+    SetPhaseMask(cPos.GetPhaseMask(), false);
 
     CreatureInfo const *cinfo = sObjectMgr.GetCreatureTemplate(Entry);
     if(!cinfo)
@@ -380,6 +380,13 @@ bool Vehicle::Create(uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, u
     if(!SetVehicleId(vehicleId))
         return false;
 
+    cPos.SelectFinalPoint(this);
+
+    if (!cPos.Relocate(this))
+        return false;
+
+    m_defaultMovementType = IDLE_MOTION_TYPE;
+
     LoadCreatureAddon();
 
     m_regenHealth = false;
@@ -392,9 +399,9 @@ bool Vehicle::Create(uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, u
     //Notify the map's instance data.
     //Only works if you create the object in it, not if it is moves to that map.
     //Normally non-players do not teleport to other maps.
-    if(map->IsDungeon() && ((DungeonMap*)map)->GetInstanceData())
+    if(cPos.GetMap()->IsDungeon() && ((DungeonMap*)cPos.GetMap())->GetInstanceData())
     {
-        ((DungeonMap*)map)->GetInstanceData()->OnCreatureCreate(this);
+        ((DungeonMap*)cPos.GetMap())->GetInstanceData()->OnCreatureCreate(this);
     }
 
     if(m_vehicleInfo->m_powerType == POWER_TYPE_STEAM)
@@ -990,7 +997,9 @@ void Vehicle::InstallAllAccessories()
                 entry = data->id;
             }
 
-            if(!pPassenger->Create(guid, GetMap(), GetPhaseMask(), entry, TEAM_NONE))
+            CreatureCreatePos cPos(GetMap(), GetPositionX(), GetPositionY(), GetPositionZ(), GetOrientation(), GetPhaseMask());
+
+            if(!pPassenger->Create(guid, cPos, entry, TEAM_NONE))
                 continue;
             pPassenger->LoadFromDB(guid, GetMap());
             pPassenger->Relocate(GetPositionX(), GetPositionY(), GetPositionZ());

@@ -36,7 +36,7 @@ INSERT INTO `script_texts` VALUES
 (-1603023,'Ready to move out, keep those dwarves off of our backs!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'1',0,0,'razor aggro 3 - eng'),
 (-1603024,'Move! Quickly! She won’t remain grounded for long.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'1',0,0,'razor ground - commander'),
 (-1603025,'Razorscale takes a deep breath...',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'3',0,0,'razor deep breath'),
-(-1603026,'Fires out! Let\'s rebuild those turrets!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'1',0,0,'razor extinguish fires'),
+(-1603026,"Fires out! Let\'s rebuild those turrets!",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'1',0,0,'razor extinguish fires'),
 (-1603353,'Harpoon Turret is ready for use!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_harpoon'),
 (-1603354,'Razorscale grounded permanently!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_ground');
 
@@ -126,7 +126,7 @@ INSERT INTO script_texts (entry, content_default, content_loc1, content_loc2, co
 (-1603153,"You have strayed too far, wasted too much time!","","","","","","","","",15532,1,0,0,"freya berserk"),
 (-1603154,"Eonar, your servant calls for your blessing!","","","","","","","","",15535,1,0,0,"freya yogg"),
 (-1603155,'Allies of Nature have appeared!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_allies'),
-(-1603156,'A Lifebinder\'s Gift begins to grow!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_lifebinders'),
+(-1603156,"A Lifebinder's Gift begins to grow!" ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_lifebinders'),
 (-1603157,'Freya begins to cast Ground Tremor!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_ground tremor'),
 (-1603158,'Freya casts Strenghtened Iron Roots!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_iron roots'),
 -- Brightleaf
@@ -144,3 +144,17 @@ INSERT INTO script_texts (entry, content_default, content_loc1, content_loc2, co
 (-1603168,"<Angry roar>","","","","","","","","",15501,1,0,0,"stonebark slay1"),
 (-1603169,"Such a waste.","","","","","","","","",15502,1,0,0,"stonebark slay2"),
 (-1603170,"Matron, flee! They are ruthless....","","","","","","","","",15503,1,0,0,"stonebark death");
+
+-- Hodir
+DELETE FROM script_texts WHERE entry BETWEEN -1603180 AND -1603171;
+INSERT INTO script_texts (entry, content_default, content_loc1, content_loc2, content_loc3, content_loc4, content_loc5, content_loc6, content_loc7, content_loc8, sound, type, language, emote, comment) VALUES
+(-1603171,"<Furious Roar>","","","","","","","","",15556,2,0,0,"Hodir Frozen Blows"),
+(-1603172,"Winds of the north consume you!","","","","","","","","",15555,1,0,0,"Hodir Flash Freeze"),
+(-1603173,"Welcome to the endless winter.","","","","","","","","",15554,1,0,0,"Hodir Slay 2"),
+(-1603174,"Tragic. To come so far, only to fail.","","","","","","","","",15553,1,0,0,"Hodir Slay 1"),
+(-1603175,"I... I am released from his grasp... at last.","","","","","","","","",15557,1,0,0,"Hodir Death"),
+(-1603176,"You will suffer for this trespass!","","","","","","","","",15552,1,0,0,"Hodir Aggro"),
+(-1603177,"The veil of winter will protect you, champions!","","","","","","","","",15559,1,0,0,"Hodir yogg"),
+(-1603178,"Enough! This ends now!","","","","","","","","",15558,1,0,0,"Hodir berserk"),
+(-1603179,'Hodir begins to cast Flash Freeze!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_flash freeze'),
+(-1603180,'Hodir gains Frozen Blows!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_frozen blows');

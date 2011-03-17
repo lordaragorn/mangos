@@ -1721,33 +1721,18 @@ Creature* WorldObject::SummonCreature(uint32 id, float x, float y, float z, floa
     if (GetTypeId()==TYPEID_PLAYER)
         team = ((Player*)this)->GetTeam();
 
-    // FIXME: Setup near to finish point because GetObjectBoundingRadius set in Create but some Create calls can be dependent from proper position
-    // if creature have creature_template_addon.auras with persistent point for example or script call
+    CreatureCreatePos pos(GetMap(), x, y, z, ang, GetPhaseMask());
+
     if (x == 0.0f && y == 0.0f && z == 0.0f)
-        GetClosePoint(x, y, z, 0);
+        pos = CreatureCreatePos(this, GetOrientation(), CONTACT_DISTANCE, ang);
 
-    pCreature->Relocate(x, y, z, ang);
-
-    if (!pCreature->Create(GetMap()->GenerateLocalLowGuid(HIGHGUID_UNIT), GetMap(), GetPhaseMask(), id, team))
+    if (!pCreature->Create(GetMap()->GenerateLocalLowGuid(HIGHGUID_UNIT), pos, id, team))
     {
         delete pCreature;
         return NULL;
     }
 
-    if (x == 0.0f && y == 0.0f && z == 0.0f)
-    {
-        GetClosePoint(x, y, z, pCreature->GetObjectBoundingRadius());
-        pCreature->Relocate(x, y, z, ang);
-    }
-
-    pCreature->SetSummonPoint(x, y, z, ang);
-
-    if(!pCreature->IsPositionValid())
-    {
-        sLog.outError("Creature (guidlow %d, entry %d) not summoned. Suggested coordinates isn't valid (X: %f Y: %f)",pCreature->GetGUIDLow(),pCreature->GetEntry(),pCreature->GetPositionX(),pCreature->GetPositionY());
-        delete pCreature;
-        return NULL;
-    }
+    pCreature->SetSummonPoint(pos);
 
     // Active state set before added to map
     pCreature->SetActiveObjectState(asActiveObject);
@@ -1770,7 +1755,9 @@ Vehicle* WorldObject::SummonVehicle(uint32 id, float x, float y, float z, float 
     if (GetTypeId()==TYPEID_PLAYER)
         team = ((Player*)this)->GetTeam();
 
-    if(!v->Create(GetMap()->GenerateLocalLowGuid(HIGHGUID_VEHICLE), map, GetPhaseMask(), id, vehicleId, TEAM_NONE))
+    CreatureCreatePos cPos(map, x, y, z, ang, GetPhaseMask());
+
+    if(!v->Create(cPos.GetMap()->GenerateLocalLowGuid(HIGHGUID_VEHICLE), cPos, id, vehicleId, TEAM_NONE))
     {
         delete v;
         return NULL;
