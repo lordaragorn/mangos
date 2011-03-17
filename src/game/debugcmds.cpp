@@ -667,23 +667,23 @@ bool ChatHandler::HandleDebugSpawnVehicleCommand(char* args)
 
     Vehicle *v = new Vehicle;
 
-    CreatureCreatePos cPos(chr, chr->GetOrientation());
+    CreatureCreatePos pos(chr, chr->GetOrientation());
 
-    if (!v->Create(cPos.GetMap()->GenerateLocalLowGuid(HIGHGUID_VEHICLE), cPos, entry, id, chr->GetTeam()))
+    if (!v->Create(pos.GetMap()->GenerateLocalLowGuid(HIGHGUID_VEHICLE), pos, entry, id, chr->GetTeam()))
     {
         delete v;
         return false;
     }
 
-    cPos.GetMap()->Add((Creature*)v);
+    pos.GetMap()->Add((Creature*)v);
 
-    if (!v->Create(cPos.GetMap()->GenerateLocalLowGuid(HIGHGUID_VEHICLE), cPos, entry, id, m_session->GetPlayer()->GetTeam()))
+    if (!v->Create(pos.GetMap()->GenerateLocalLowGuid(HIGHGUID_VEHICLE), pos, entry, id, m_session->GetPlayer()->GetTeam()))
     {
         delete v;
         return false;
     }
 
-    cPos.GetMap()->Add((Creature*)v);
+    pos.GetMap()->Add((Creature*)v);
     v->AIM_Initialize();
 
     return true;
