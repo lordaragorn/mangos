@@ -1,5 +1,5 @@
 -- Instance Ulduar
--- Instance last changes: a599
+-- Instance last changes: a600
 
 -- teleporter
 UPDATE gameobject_template SET ScriptName = "go_ulduar_teleporter" WHERE entry = 194569;
@@ -601,6 +601,7 @@ INSERT INTO reference_loot_template VALUES
 
 -- Hodir
 UPDATE creature_template SET ScriptName = 'boss_hodir' WHERE entry = 32845;
+UPDATE creature SET phaseMask = 1 WHERE id IN (32845, 33325, 32901, 32941, 33333, 33328, 32900, 33332, 32950, 32893, 33327, 33331, 32946, 32897, 33326, 32948, 33330);
 UPDATE creature_template SET ScriptName = 'mob_toasty_fire' WHERE entry = 33342;
 UPDATE creature_template SET ScriptName = 'mob_flashFreeze' WHERE entry IN (32926);
 UPDATE creature_template SET ScriptName = 'npc_hodir_priest' WHERE entry IN (32897, 33326, 32948, 33330);
@@ -610,10 +611,13 @@ UPDATE creature_template SET ScriptName = 'npc_hodir_mage' WHERE entry IN (32893
 -- flash freeze that will lock the npcs IN iceblock
 UPDATE creature_template SET modelid_1 = 25865, ScriptName = 'mob_npc_flashFreeze' WHERE entry IN (32938, 33353);
 UPDATE creature_template SET modelid_1 = 15880 WHERE `entry` = 33174;
-UPDATE creature_template SET modelid_2 = 28470, ScriptName = 'mob_icicle' WHERE `entry` = 33169;
+UPDATE creature_template SET ScriptName = 'mob_icicle' WHERE `entry` IN (33169, 33173, 33174);
 
 UPDATE creature SET spawnMask = 3 WHERE id IN (32938);
 UPDATE creature SET spawnMask = 2 WHERE id IN (32901, 32900, 32950, 32946,33333, 33330, 33326);
+
+-- make friendly NPCs stand still
+UPDATE creature SET MovementType = 0 WHERE id IN (33325, 32901, 32941, 33333, 33328, 32900, 33332, 32950, 32893, 33327, 33331, 32946, 32897, 33326, 32948, 33330);
 
 -- FIXED SOME POSITIONING FOR THE FRIENDLY NPCS, Besides this the freeze aura should also be fixed.
 -- fixed npc positioning and added 4 extra flashfreeze for them.
