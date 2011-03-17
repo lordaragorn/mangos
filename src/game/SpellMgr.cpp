@@ -1916,6 +1916,14 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                     (spellInfo_2->Id == 62559 && spellInfo_1->Id == 56741) )
                     return false;
 
+                    // Blood Fury and Rage of the Unraveller
+                    if (spellInfo_1->SpellIconID == 1662 && spellInfo_2->SpellIconID == 1662)
+                        return false;
+
+                    // Kindred Spirits
+                    if (spellInfo_1->SpellIconID == 3559 && spellInfo_2->SpellIconID == 3559)
+                        return false;
+
                 // Fel Rage (Gurtog Bloodboil spell)
                 if(spellInfo_1->SpellIconID == 1930 && spellInfo_2->SpellIconID == 1930)
                     return false;
@@ -2219,6 +2227,7 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                     spellInfo_2->SpellIconID == 64 && spellInfo_1->SpellIconID == 3088)
                     return false;
             }
+
             break;
         case SPELLFAMILY_ROGUE:
             if (spellInfo_2->SpellFamilyName == SPELLFAMILY_ROGUE)
