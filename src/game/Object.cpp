@@ -1717,7 +1717,9 @@ Vehicle* WorldObject::SummonVehicle(uint32 id, float x, float y, float z, float 
     if (GetTypeId()==TYPEID_PLAYER)
         team = ((Player*)this)->GetTeam();
 
-    if(!v->Create(GetMap()->GenerateLocalLowGuid(HIGHGUID_VEHICLE), map, GetPhaseMask(), id, vehicleId, TEAM_NONE))
+    CreatureCreatePos cPos(map, x, y, z, ang, GetPhaseMask());
+
+    if(!v->Create(cPos.GetMap()->GenerateLocalLowGuid(HIGHGUID_VEHICLE), cPos, id, vehicleId, TEAM_NONE))
     {
         delete v;
         return NULL;
