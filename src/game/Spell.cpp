@@ -1589,6 +1589,7 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 28542:                                 // Life Drain
                 case 66013:                                 // Penetrating Cold (10 man)
                 case 68509:                                 // Penetrating Cold (10 man heroic)
+                case 62476:                                 // Icicle (Hodir 10man)
                     unMaxTargets = 2;
                     break;
                 case 28796:                                 // Poison Bolt Volley
@@ -1598,6 +1599,7 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 54522:
                 case 61693:                                 // Arcane Storm (Malygos)
                 case 60936:                                 // Surge of Power (h) (Malygos)
+                case 62477:                                 // Icicle (Hodir 25man)
                     unMaxTargets = 3;
                     break;
                 case 61916:                                 // Lightning Whirl (Stormcaller Brundir - Ulduar)
@@ -3402,6 +3404,9 @@ void Spell::cast(bool skipCheck)
             // Chaos Bane strength buff
             else if (m_spellInfo->Id == 71904)
                 AddTriggeredSpell(73422);
+            // Flash Freeze (Hodir: Ulduar)
+            else if (m_spellInfo->Id == 61968)
+                AddTriggeredSpell(62148);                   // visual effect
             break;
         }
         case SPELLFAMILY_MAGE:
@@ -4268,7 +4273,7 @@ void Spell::WriteAmmoToPacket( WorldPacket * data )
     }
     else
     {
-        for (uint8 i = 0; i < 3; ++i)
+        for (uint8 i = 0; i < MAX_VIRTUAL_ITEM_SLOT; ++i)
         {
             if(uint32 item_id = m_caster->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + i))
             {
@@ -5309,7 +5314,16 @@ SpellCastResult Spell::CheckCast(bool strict)
                 SpellScriptTargetBounds bounds = sSpellMgr.GetSpellScriptTargetBounds(m_spellInfo->Id);
 
                 if (bounds.first == bounds.second)
-                    sLog.outErrorDb("Spell (ID: %u) has effect EffectImplicitTargetA/EffectImplicitTargetB = TARGET_SCRIPT or TARGET_SCRIPT_COORDINATES, but does not have record in `spell_script_target`", m_spellInfo->Id);
+                {
+                    if (m_spellInfo->EffectImplicitTargetA[j] == TARGET_SCRIPT || m_spellInfo->EffectImplicitTargetB[j] == TARGET_SCRIPT)
+                        sLog.outErrorDb("Spell entry %u, effect %i has EffectImplicitTargetA/EffectImplicitTargetB = TARGET_SCRIPT, but creature are not defined in `spell_script_target`", m_spellInfo->Id, j);
+
+                    if (m_spellInfo->EffectImplicitTargetA[j] == TARGET_SCRIPT_COORDINATES || m_spellInfo->EffectImplicitTargetB[j] == TARGET_SCRIPT_COORDINATES)
+                        sLog.outErrorDb("Spell entry %u, effect %i has EffectImplicitTargetA/EffectImplicitTargetB = TARGET_SCRIPT_COORDINATES, but gameobject or creature are not defined in `spell_script_target`", m_spellInfo->Id, j);
+
+                    if (m_spellInfo->EffectImplicitTargetA[j] == TARGET_FOCUS_OR_SCRIPTED_GAMEOBJECT)
+                        sLog.outErrorDb("Spell entry %u, effect %i has EffectImplicitTargetA/EffectImplicitTargetB = TARGET_FOCUS_OR_SCRIPTED_GAMEOBJECT, but gameobject are not defined in `spell_script_target`", m_spellInfo->Id, j);
+                }
 
                 SpellRangeEntry const* srange = sSpellRangeStore.LookupEntry(m_spellInfo->rangeIndex);
                 float range = GetSpellMaxRange(srange);
