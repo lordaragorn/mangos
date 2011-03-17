@@ -1164,7 +1164,7 @@ struct MANGOS_DLL_DECL npc_eye_of_acherusAI : public ScriptedAI
         Reset();
     }
 
-    int32 StartTimer;
+    uint32 StartTimer;
     bool Active;
     ObjectGuid ownerGuid;
 
@@ -3205,7 +3205,8 @@ struct MANGOS_DLL_DECL npc_highlord_darion_mograineAI : public npc_escortAI
 
         GetNearRandomPoint(x, y, z, 30);
 
-        pCreature->SetSummonPoint(x, y, z, o);
+        CreatureCreatePos cPos(m_creature->GetMap(), x, y, z, o, m_creature->GetPhaseMask());
+        pCreature->SetSummonPoint(cPos);
     }
 
     void GetNearRandomPoint(float &x, float &y, float &z, uint8 radius)
