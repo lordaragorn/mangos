@@ -349,17 +349,19 @@ INSERT INTO gameobject VALUES
 (200051, 194086, 607, 3, 1, 1414.51, -300.782, 31.5003, 0.741055, 0, 0, 0.362107, 0.932136, 60, 0, 1);
 
 -- ScriptDev2 scripts
+UPDATE creature_template SET ScriptName='npc_sa_cannon' WHERE entry=27894;
+UPDATE creature_template SET ScriptName='npc_sa_demolisher' WHERE entry=28781;
 UPDATE creature_template SET ScriptName='npc_sa_vendor' WHERE entry IN (29260, 29262);
 UPDATE gameobject_template SET ScriptName='go_sa_def_portal' WHERE entry=191575;
 
 -- Immune masks for SOTA's vehicles
 UPDATE creature_template SET mechanic_immune_mask=mechanic_immune_mask
 |16384		-- BLEED
-|536870912		-- SAPPED
-|16777216		-- SLEEP
+|536870912	-- SAPPED
+|16777216	-- SLEEP
 |65536		-- POLYMORPH
 |2048		-- STUN
 |8192		-- KNOCKOUT
-|8388608		-- HORROR
+|8388608	-- HORROR
 |16		-- FEAR
 WHERE entry IN (32795,27894,28781,32796);
