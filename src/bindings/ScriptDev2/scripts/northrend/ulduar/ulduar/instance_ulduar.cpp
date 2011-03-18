@@ -61,8 +61,8 @@ void instance_ulduar::Initialize()
     m_uiYoggSaronGUID       = 0;
     m_uiAlgalonGUID         = 0;
     m_uiRightArmGUID        = 0;
-    m_uiLeftArmGUID            = 0;
-    m_uiFeralDefenderGUID    = 0;
+    m_uiLeftArmGUID         = 0;
+    m_uiFeralDefenderGUID   = 0;
     m_uiElderBrightleafGUID = 0;
     m_uiElderStonebarkGUID  = 0;
     m_uiElderIronbrachGUID  = 0;
@@ -361,7 +361,7 @@ void instance_ulduar::OnObjectCreate(GameObject *pGo)
         break;
     case GO_HODIR_ENTER:
         m_uiHodirEnterDoorGUID = pGo->GetGUID();
-        pGo->SetGoState(GO_STATE_READY);
+        pGo->SetGoState(GO_STATE_ACTIVE);
         break;
         // Mimiron
     case GO_MIMIRON_TRAM:

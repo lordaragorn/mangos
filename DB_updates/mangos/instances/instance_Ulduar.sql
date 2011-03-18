@@ -1,5 +1,5 @@
 -- Instance Ulduar
--- Instance last changes: a603
+-- Instance last changes: a604
 
 -- teleporter
 UPDATE gameobject_template SET ScriptName = "go_ulduar_teleporter" WHERE entry = 194569;
@@ -616,7 +616,7 @@ UPDATE creature_template SET ScriptName = 'mob_icicle' WHERE `entry` IN (33169, 
 
 -- FIXED SOME POSITIONING FOR THE FRIENDLY NPCS, Besides this the freeze aura should also be fixed.
 -- fixed npc positioning and added 4 extra flashfreeze for them.
-DELETE FROM creature WHERE id IN (33325, 32901, 32941, 33333, 33328, 32900, 33332, 32950, 32893, 33327, 33331, 32946, 32897, 33326, 32948, 33330);
+DELETE FROM creature WHERE id IN (32938, 33325, 32901, 32941, 33333, 33328, 32900, 33332, 32950, 32893, 33327, 33331, 32946, 32897, 33326, 32948, 33330);
 -- INSERT INTO creature VALUES
 -- ();
 
