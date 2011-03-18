@@ -1,5 +1,5 @@
 -- Instance Ulduar
--- Instance last changes: a600
+-- Instance last changes: a602
 
 -- teleporter
 UPDATE gameobject_template SET ScriptName = "go_ulduar_teleporter" WHERE entry = 194569;
@@ -609,7 +609,7 @@ UPDATE creature_template SET ScriptName = 'npc_hodir_druid' WHERE entry IN (3332
 UPDATE creature_template SET ScriptName = 'npc_hodir_shaman' WHERE entry IN (33328, 32900, 33332, 32950);
 UPDATE creature_template SET ScriptName = 'npc_hodir_mage' WHERE entry IN (32893, 33327, 33331, 32946);
 -- flash freeze that will lock the npcs IN iceblock
-UPDATE creature_template SET modelid_1 = 25865, ScriptName = 'mob_npc_flashFreeze' WHERE entry IN (32938, 33353);
+UPDATE creature_template SET modelid_1 = 25865, ScriptName = 'mob_npc_flashFreeze' WHERE entry = 32938;
 UPDATE creature_template SET modelid_1 = 15880 WHERE `entry` = 33174;
 UPDATE creature_template SET ScriptName = 'mob_icicle' WHERE `entry` IN (33169, 33173, 33174);
 

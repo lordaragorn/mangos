@@ -535,6 +535,8 @@ void Unit::RemoveSpellbyDamageTaken(AuraType auraType, uint32 damage)
                     case 62861:
                     case 58373:                               // Glyph of Hamstring
                     case 23694:                               // Improved Hamstring
+                    case 61969:                               // Flash Freeze (Hodir)
+                    case 62469:                               // Freeze (Hodir)
                         // don't remove
                         break;
                     default:

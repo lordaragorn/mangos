@@ -62,11 +62,15 @@ enum
     SPELL_ICICLE_DUMMY          = 62453,    // cast by Snowpacked Icicle, after this they cast Icicle with snowdrift
     SPELL_SNOWDRIFT             = 62463,
     SPELL_SAFE_AREA_AURA        = 65705,    // snowpacked icicles cast this around on players to make them safe from flash freeze
+    SPELL_SAFE_AREA_BUFF        = 62464,
+    SPELL_FLASH_FREEZE_KILL     = 62226,    // if target was already Flash Frozen then kill it
     SPELL_FLASH_FREEZE          = 61968,    // main spell cast by Hodir
-    SPELL_FLASH_FREEZE_VIS      = 62148,    // visual effect, triggered after main spell
-    SPELL_FLASH_FREEZE_STUN     = 64175,
-    SPELL_FLASH_FREEZE_KILL     = 62226,
+    SPELL_FLASH_FREEZE_DEBUFF   = 61969,    // stun aura
+    SPELL_FLASH_FREEZE_SUMMON   = 61970,    // targets of Flash Freeze summon NPC
+    SPELL_FLASH_FREEZE_SUM_NPC  = 61989,    // used by NPC
     SPELL_FLASH_FREEZE_NPC_STUN = 61990,    // used to freeze npcs
+    //SPELL_FLASH_FREEZE_VIS    = 62148,    // visual effect, triggered after main spell
+    SPELL_FLASH_FREEZE_STUN     = 64175,
 
     NPC_SNOWDRIFT_TARGET    = 33174,
     NPC_ICICLE              = 33169,
@@ -240,6 +244,23 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
         DoScriptText(urand(0, 1) ? SAY_SLAY_1 : SAY_SLAY_2, m_creature);
     }
 
+    void SpellHitTarget(Unit *pTarget, const SpellEntry *spellProto)
+    {
+        if (spellProto->Id == SPELL_FLASH_FREEZE)
+        {
+            if (pTarget->GetTypeId() != TYPEID_PLAYER)
+                return;
+
+            if (!pTarget->HasAura(SPELL_SAFE_AREA_BUFF, EFFECT_INDEX_0))
+            {
+                //if (pTarget->HasAura(SPELL_FLASH_FREEZE_DEBUFF, EFFECT_INDEX_0))
+                    //DoCastSpellIfCan(pTarget, SPELL_FLASH_FREEZE_KILL, true);
+                //else
+                    DoCastSpellIfCan(pTarget, SPELL_FLASH_FREEZE_SUMMON, CAST_TRIGGERED);
+            }
+        }
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
         if(!m_bIsOutro)
@@ -369,11 +390,11 @@ struct MANGOS_DLL_DECL mob_icicleAI : public ScriptedAI
                 m_creature->SetDisplayId(11686); // invinsible
                 m_uiActionTimer = 4000;
                 break;*/
-            case NPC_SNOW_ICICLE://NPC_SNOWDRIFT_TARGET:
+            case NPC_SNOW_ICICLE: //NPC_SNOWDRIFT_TARGET:
                 m_creature->SetDisplayId(28470);
                 DoCastSpellIfCan(m_creature, SPELL_SAFE_AREA_AURA, CAST_TRIGGERED);
                 m_uiSpellId = SPELL_ICICLE_SNOWDRIFT;
-                m_uiActionTimer = 4000;
+                m_uiActionTimer = 0;
                 break;
             default:
                 break;
@@ -398,7 +419,6 @@ struct MANGOS_DLL_DECL mob_icicleAI : public ScriptedAI
                 m_creature->GetPosition(x, y, z);
                 m_creature->SummonCreature(NPC_SNOWDRIFT_TARGET, x, y, z, 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 10000);
                 m_uiActionTimer = 30000;
-                m_creature->ForcedDespawn();
                 return;
             }
             else*/
@@ -409,6 +429,48 @@ struct MANGOS_DLL_DECL mob_icicleAI : public ScriptedAI
             }
 
         }else m_uiActionTimer -= uiDiff;
+    }
+};
+
+// script for Flash freeze
+struct MANGOS_DLL_DECL mob_flashFreezeAI : public ScriptedAI
+{
+    mob_flashFreezeAI(Creature* pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = pCreature->GetInstanceData();
+        pCreature->SetDisplayId(11686);     // make invisible
+        SetCombatMovement(false);
+        m_uiVictimGUID = m_creature->GetCreatorGuid().GetRawValue();
+        m_bIsFrozen = false;
+        Reset();
+    }
+
+    InstanceData *m_pInstance;
+    uint64 m_uiVictimGUID;
+    bool m_bIsFrozen;
+
+    void Reset(){}
+    void AttackStart(Unit* pWho){}
+
+    void JustDied(Unit* Killer)
+    {
+        if (!m_pInstance)
+            return;
+
+        if (Unit* pVictim = m_pInstance->instance->GetUnit(m_uiVictimGUID))
+            pVictim->RemoveAurasDueToSpell(SPELL_FLASH_FREEZE_DEBUFF);
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!m_bIsFrozen && m_pInstance)
+        {
+            if (Unit* pVictim = m_pInstance->instance->GetUnit(m_uiVictimGUID))
+            {
+                DoCastSpellIfCan(pVictim, SPELL_FLASH_FREEZE_DEBUFF, CAST_TRIGGERED);
+                m_bIsFrozen = true;
+            }
+        }
     }
 };
 
@@ -812,61 +874,6 @@ struct MANGOS_DLL_DECL npc_hodir_priestAI : public ScriptedAI
     }
  };
 
-// script for Flash freeze
-struct MANGOS_DLL_DECL mob_flashFreezeAI : public ScriptedAI
-{
-    mob_flashFreezeAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-        pCreature->SetDisplayId(11686);     // make invisible
-        SetCombatMovement(false);
-        Reset();
-    }
-
-    bool m_bIsRegularMode;
-    uint64 m_uiVictimGUID;
-
-    void Reset()
-    {
-        m_uiVictimGUID = 0;
-        if(m_bIsRegularMode)
-            m_creature->SetMaxHealth(35000);
-        m_creature->SetRespawnDelay(DAY);
-    }
-
-    void Aggro(Unit* pWho)
-    {
-        m_creature->SetInCombatWith(pWho);
-        pWho->SetInCombatWith(m_creature);
-        DoCast(pWho, SPELL_FLASH_FREEZE_STUN);
-        pWho->CastSpell(pWho, SPELL_FLASH_FREEZE_STUN, false);
-        m_uiVictimGUID = pWho->GetGUID();
-        // kill targets that are frozen
-        if(pWho->HasAura(SPELL_FREEZE, EFFECT_INDEX_0))
-        {
-            pWho->CastSpell(pWho, SPELL_FLASH_FREEZE_KILL, false);
-            m_creature->ForcedDespawn();
-        }
-    }
-
-    void KilledUnit(Unit* pVictim)
-    {
-        if (pVictim)
-            pVictim->RemoveAurasDueToSpell(SPELL_FLASH_FREEZE_STUN);
-    }
-
-    void JustDied(Unit* Killer)
-    {
-        if (Unit* pVictim = m_creature->GetMap()->GetUnit( m_uiVictimGUID))
-            pVictim->RemoveAurasDueToSpell(SPELL_FLASH_FREEZE_STUN);
-
-        if (Killer)
-            Killer->RemoveAurasDueToSpell(SPELL_FLASH_FREEZE_STUN);
-    }
-
-    void UpdateAI(const uint32 diff) {}
-};
-
 // Toasty fire. Used by mage
 struct MANGOS_DLL_DECL mob_toasty_fireAI : public ScriptedAI
 {
@@ -1006,7 +1013,7 @@ void AddSC_boss_hodir()
     newscript->GetAI = &GetAI_boss_hodir;
     newscript->RegisterSelf();
 
-    /*newscript = new Script;
+    newscript = new Script;
     newscript->Name = "mob_flashFreeze";
     newscript->GetAI = &GetAI_mob_flashFreeze;
     newscript->RegisterSelf();
@@ -1014,7 +1021,7 @@ void AddSC_boss_hodir()
     newscript = new Script;
     newscript->Name = "mob_npc_flashFreeze";
     newscript->GetAI = &GetAI_mob_npc_flashFreeze;
-    newscript->RegisterSelf();*/
+    newscript->RegisterSelf();
 
     newscript = new Script;
     newscript->Name = "mob_icicle";
