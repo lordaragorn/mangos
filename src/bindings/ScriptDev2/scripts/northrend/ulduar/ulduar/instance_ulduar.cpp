@@ -351,12 +351,12 @@ void instance_ulduar::OnObjectCreate(GameObject *pGo)
         // Hodir
     case GO_HODIR_EXIT:
         m_uiHodirExitDoorGUID = pGo->GetGUID();
-        if(m_auiEncounter[8])
+        if(m_auiEncounter[8] == DONE)
             pGo->SetGoState(GO_STATE_ACTIVE);
         break;
     case GO_HODIR_ICE_WALL:
         m_uiHodirWallGUID = pGo->GetGUID();
-        if(m_auiEncounter[8])
+        if(m_auiEncounter[8] == DONE)
             pGo->SetGoState(GO_STATE_ACTIVE);
         break;
     case GO_HODIR_ENTER:
@@ -643,14 +643,21 @@ void instance_ulduar::SetData(uint32 uiType, uint32 uiData)
         m_auiEncounter[8] = uiData;
         if (uiData == DONE)
         {
+            OpenDoor(m_uiHodirEnterDoorGUID);
             DoUseDoorOrButton(m_uiHodirWallGUID);
             DoUseDoorOrButton(m_uiHodirExitDoorGUID);
             DoRespawnGameObject(m_uiHodirLootGUID, 30*MINUTE);
+
             // used to make the friendly keeper visible
             if(Creature* pImage = instance->GetCreature(m_uiHodirImageGUID))
                 pImage->SetVisibility(VISIBILITY_ON);
+
             DoOpenMadnessDoorIfCan();
         }
+        else if (uiData == IN_PROGRESS)
+            CloseDoor(m_uiHodirEnterDoorGUID);
+        else if (uiData == FAIL)
+            OpenDoor(m_uiHodirEnterDoorGUID);
         break;
     case TYPE_THORIM:
         m_auiEncounter[9] = uiData;

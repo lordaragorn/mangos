@@ -157,7 +157,7 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
 
         // respawn friendly npcs
         // druids
-        GetCreatureListWithEntryInGrid(lFriends, m_creature, 33325, DEFAULT_VISIBILITY_INSTANCE);
+        /*GetCreatureListWithEntryInGrid(lFriends, m_creature, 33325, DEFAULT_VISIBILITY_INSTANCE);
         GetCreatureListWithEntryInGrid(lFriends, m_creature, 32901, DEFAULT_VISIBILITY_INSTANCE);
         GetCreatureListWithEntryInGrid(lFriends, m_creature, 32941, DEFAULT_VISIBILITY_INSTANCE);
         GetCreatureListWithEntryInGrid(lFriends, m_creature, 33333, DEFAULT_VISIBILITY_INSTANCE);
@@ -185,13 +185,13 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
                 if ((*iter) && !(*iter)->isAlive())
                     (*iter)->Respawn();
             }
-        }
+        }*/
     }
 
     void JustReachedHome()
     {
         if(m_pInstance)
-            m_pInstance->SetData(TYPE_HODIR, NOT_STARTED);
+            m_pInstance->SetData(TYPE_HODIR, FAIL);
     }
 
     void Aggro(Unit *who)
@@ -253,10 +253,10 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
 
             if (!pTarget->HasAura(SPELL_SAFE_AREA_BUFF, EFFECT_INDEX_0))
             {
-                //if (pTarget->HasAura(SPELL_FLASH_FREEZE_DEBUFF, EFFECT_INDEX_0))
-                    //DoCastSpellIfCan(pTarget, SPELL_FLASH_FREEZE_KILL, true);
-                //else
-                    DoCastSpellIfCan(pTarget, SPELL_FLASH_FREEZE_SUMMON, CAST_TRIGGERED);
+                if (pTarget->HasAura(SPELL_FLASH_FREEZE_DEBUFF, EFFECT_INDEX_0))
+                    DoCastSpellIfCan(pTarget, SPELL_FLASH_FREEZE_KILL, true);
+                else
+                    pTarget->CastSpell(pTarget, SPELL_FLASH_FREEZE_SUMMON, true);
             }
         }
     }
@@ -373,8 +373,8 @@ struct MANGOS_DLL_DECL mob_icicleAI : public ScriptedAI
         m_pInstance = pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
 
-        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        //pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        //pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         SetCombatMovement(false);
         m_uiSpellId = 0;
         m_uiActionTimer = 10000;
@@ -386,19 +386,23 @@ struct MANGOS_DLL_DECL mob_icicleAI : public ScriptedAI
                 m_uiActionTimer = 1000;
                 m_uiSpellId = m_bIsRegularMode ? SPELL_ICICLE_DAMAGE : SPELL_ICICLE_DAMAGE_H;
                 break;
-            /*case NPC_SNOW_ICICLE:
-                m_creature->SetDisplayId(11686); // invinsible
-                m_uiActionTimer = 4000;
-                break;*/
-            case NPC_SNOW_ICICLE: //NPC_SNOWDRIFT_TARGET:
+            case NPC_SNOW_ICICLE:
                 m_creature->SetDisplayId(28470);
-                DoCastSpellIfCan(m_creature, SPELL_SAFE_AREA_AURA, CAST_TRIGGERED);
                 m_uiSpellId = SPELL_ICICLE_SNOWDRIFT;
-                m_uiActionTimer = 0;
+                m_uiActionTimer = 4000;
+                // summon marker for Safe Area
+                m_creature->GetPosition(x, y, z);
+                m_creature->SummonCreature(NPC_SNOWDRIFT_TARGET, x, y, z, 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 10000);
+                break;
+            case NPC_SNOWDRIFT_TARGET:
+                m_creature->SetDisplayId(11686); // invinsible
+                DoCastSpellIfCan(m_creature, SPELL_SAFE_AREA_AURA, CAST_TRIGGERED);
+                m_creature->ForcedDespawn(9000);
                 break;
             default:
                 break;
         }
+        m_creature->SetRespawnDelay(7*DAY*IN_MILLISECONDS);
     }
 
     InstanceData *m_pInstance;
@@ -407,27 +411,16 @@ struct MANGOS_DLL_DECL mob_icicleAI : public ScriptedAI
     uint32 m_uiSpellId;
     float x, y, z;
 
-    void Reset(){}
-	void AttackStart(Unit* pWho) { return; }
+    void Reset() {}
+	void AttackStart(Unit* pWho) {}
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if(m_uiActionTimer <= uiDiff)
+        if (m_uiActionTimer <= uiDiff)
         {
-            /*if (m_creature->GetEntry() == NPC_SNOW_ICICLE)
-            {
-                m_creature->GetPosition(x, y, z);
-                m_creature->SummonCreature(NPC_SNOWDRIFT_TARGET, x, y, z, 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 10000);
-                m_uiActionTimer = 30000;
-                return;
-            }
-            else*/
-            {
-                DoCastSpellIfCan(m_creature, m_uiSpellId, CAST_TRIGGERED);
-                DoCastSpellIfCan(m_creature, SPELL_ICICLE_DUMMY);
-                m_uiActionTimer = 30000;
-            }
-
+            DoCastSpellIfCan(m_creature, m_uiSpellId, CAST_TRIGGERED);
+            DoCastSpellIfCan(m_creature, SPELL_ICICLE_DUMMY);
+            m_uiActionTimer = 30000;
         }else m_uiActionTimer -= uiDiff;
     }
 };
@@ -440,14 +433,14 @@ struct MANGOS_DLL_DECL mob_flashFreezeAI : public ScriptedAI
         m_pInstance = pCreature->GetInstanceData();
         pCreature->SetDisplayId(11686);     // make invisible
         SetCombatMovement(false);
-        m_uiVictimGUID = m_creature->GetCreatorGuid().GetRawValue();
         m_bIsFrozen = false;
+        m_uiCheckTimer = 1000;
         Reset();
     }
 
     InstanceData *m_pInstance;
-    uint64 m_uiVictimGUID;
     bool m_bIsFrozen;
+    uint32 m_uiCheckTimer;
 
     void Reset(){}
     void AttackStart(Unit* pWho){}
@@ -457,20 +450,30 @@ struct MANGOS_DLL_DECL mob_flashFreezeAI : public ScriptedAI
         if (!m_pInstance)
             return;
 
-        if (Unit* pVictim = m_pInstance->instance->GetUnit(m_uiVictimGUID))
+        if (Unit* pVictim = m_pInstance->instance->GetUnit(m_creature->GetCreatorGuid()))
             pVictim->RemoveAurasDueToSpell(SPELL_FLASH_FREEZE_DEBUFF);
     }
 
-    void UpdateAI(const uint32 diff)
+    void UpdateAI(const uint32 uiDiff)
     {
         if (!m_bIsFrozen && m_pInstance)
         {
-            if (Unit* pVictim = m_pInstance->instance->GetUnit(m_uiVictimGUID))
+            if (Unit* pVictim = m_pInstance->instance->GetUnit(m_creature->GetCreatorGuid()))
             {
                 DoCastSpellIfCan(pVictim, SPELL_FLASH_FREEZE_DEBUFF, CAST_TRIGGERED);
                 m_bIsFrozen = true;
             }
         }
+
+        if (m_uiCheckTimer <= uiDiff)
+        {
+            if (Unit* pVictim = m_pInstance->instance->GetUnit(m_creature->GetCreatorGuid()))
+            {
+                if (!pVictim->isAlive())
+                    m_creature->ForcedDespawn();
+            }
+            m_uiCheckTimer = 1000;
+        }else m_uiCheckTimer -= uiDiff;
     }
 };
 

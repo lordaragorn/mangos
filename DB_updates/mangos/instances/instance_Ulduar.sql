@@ -1,5 +1,5 @@
 -- Instance Ulduar
--- Instance last changes: a602
+-- Instance last changes: a603
 
 -- teleporter
 UPDATE gameobject_template SET ScriptName = "go_ulduar_teleporter" WHERE entry = 194569;
@@ -19,7 +19,8 @@ DELETE FROM gameobject_loot_template WHERE item = 45038;
 INSERT INTO gameobject_loot_template VALUES
 (26929, 45038, 10, 2, 1, 1, 0, 0, 0), -- Kologarn %
 (27079, 45038, 18, 7, 1, 1, 0, 0, 0), -- Freya normal
-(26962, 45038, 25, 7, 1, 1, 0, 0, 0); -- Freya hard
+(26962, 45038, 25, 7, 1, 1, 0, 0, 0), -- Freya hard
+(26946, 45038,  7, 5, 1, 1, 0, 0, 0); -- Hodir normal
 
 DELETE FROM reference_loot_template WHERE item = 45038;
 INSERT INTO reference_loot_template VALUES
@@ -601,7 +602,7 @@ INSERT INTO reference_loot_template VALUES
 
 -- Hodir
 UPDATE creature_template SET ScriptName = 'boss_hodir' WHERE entry = 32845;
-UPDATE creature SET phaseMask = 1 WHERE id IN (32845, 33325, 32901, 32941, 33333, 33328, 32900, 33332, 32950, 32893, 33327, 33331, 32946, 32897, 33326, 32948, 33330);
+UPDATE creature SET phaseMask = 1 WHERE id IN (32845, 32846, 33325, 32901, 32941, 33333, 33328, 32900, 33332, 32950, 32893, 33327, 33331, 32946, 32897, 33326, 32948, 33330);
 UPDATE creature_template SET ScriptName = 'mob_toasty_fire' WHERE entry = 33342;
 UPDATE creature_template SET ScriptName = 'mob_flashFreeze' WHERE entry IN (32926);
 UPDATE creature_template SET ScriptName = 'npc_hodir_priest' WHERE entry IN (32897, 33326, 32948, 33330);
@@ -613,47 +614,58 @@ UPDATE creature_template SET modelid_1 = 25865, ScriptName = 'mob_npc_flashFreez
 UPDATE creature_template SET modelid_1 = 15880 WHERE `entry` = 33174;
 UPDATE creature_template SET ScriptName = 'mob_icicle' WHERE `entry` IN (33169, 33173, 33174);
 
-UPDATE creature SET spawnMask = 3 WHERE id IN (32938);
-UPDATE creature SET spawnMask = 2 WHERE id IN (32901, 32900, 32950, 32946,33333, 33330, 33326);
-
--- make friendly NPCs stand still
-UPDATE creature SET MovementType = 0 WHERE id IN (33325, 32901, 32941, 33333, 33328, 32900, 33332, 32950, 32893, 33327, 33331, 32946, 32897, 33326, 32948, 33330);
-
 -- FIXED SOME POSITIONING FOR THE FRIENDLY NPCS, Besides this the freeze aura should also be fixed.
 -- fixed npc positioning and added 4 extra flashfreeze for them.
+DELETE FROM creature WHERE id IN (33325, 32901, 32941, 33333, 33328, 32900, 33332, 32950, 32893, 33327, 33331, 32946, 32897, 33326, 32948, 33330);
+-- INSERT INTO creature VALUES
+-- ();
+
+-- make friendly NPCs stand still
+-- UPDATE creature SET MovementType = 0 WHERE id IN (33325, 32901, 32941, 33333, 33328, 32900, 33332, 32950, 32893, 33327, 33331, 32946, 32897, 33326, 32948, 33330);
+
 -- 10 man: 
 -- mage
-UPDATE creature SET position_x = 2000.9, position_y = -231.232 WHERE guid = 131930;
+-- UPDATE creature SET position_x = 2000.9, position_y = -231.232 WHERE guid = 131930;
 -- priest
-UPDATE creature SET position_x = 2009.06, position_y = -244.058 WHERE guid = 131933;
-DELETE FROM creature WHERE guid IN (800005);
-INSERT INTO creature VALUES
-(800005, 32897, 603, 3, 128,0,0, 2009.06, -244.058, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0);		-- aly priest 
+-- UPDATE creature SET position_x = 2009.06, position_y = -244.058 WHERE guid = 131933;
+-- DELETE FROM creature WHERE guid IN (800005);
+-- INSERT INTO creature VALUES
+-- (800005, 32897, 603, 3, 128,0,0, 2009.06, -244.058, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0);		-- aly priest 
 -- shaman
-UPDATE creature SET position_x = 1983.75, position_y = -243.358 WHERE id = 33328;
-UPDATE creature SET position_x = 1983.75, position_y = -243.358 WHERE id = 33332;
+-- UPDATE creature SET position_x = 1983.75, position_y = -243.358 WHERE id = 33328;
+-- UPDATE creature SET position_x = 1983.75, position_y = -243.358 WHERE id = 33332;
 -- druid
-UPDATE creature SET position_x = 2021.12, position_y = -236.648 WHERE id = 32941;
-UPDATE creature SET position_x = 2021.12, position_y = -236.648 WHERE id = 33325;
+-- UPDATE creature SET position_x = 2021.12, position_y = -236.648 WHERE id = 32941;
+-- UPDATE creature SET position_x = 2021.12, position_y = -236.648 WHERE id = 33325;
 -- 25 man:
 -- druid
-UPDATE creature SET position_x = 2013.5, position_y = -240.338 WHERE id = 32901;
-DELETE FROM creature WHERE guid IN (800006);
-INSERT INTO creature VALUES
-(800006, 32938, 603, 2, 1,0,0, 2013.5, -240.338, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0);
+-- UPDATE creature SET position_x = 2013.5, position_y = -240.338 WHERE id = 32901;
+-- DELETE FROM creature WHERE guid IN (800006);
+-- INSERT INTO creature VALUES
+-- (800006, 32938, 603, 2, 1,0,0, 2013.5, -240.338, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0);
 -- shaman:
-UPDATE creature SET position_x = 2011.48, position_y = -232.79 WHERE id = 32900;
-UPDATE creature SET position_x = 2011.48, position_y = -232.79 WHERE id = 32950;
-DELETE FROM creature WHERE guid IN (800007);
-INSERT INTO creature VALUES
-(800007, 32938, 603, 2, 1,0,0, 2011.48, -232.79, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0);
+-- UPDATE creature SET position_x = 2011.48, position_y = -232.79 WHERE id = 32900;
+-- UPDATE creature SET position_x = 2011.48, position_y = -232.79 WHERE id = 32950;
+-- DELETE FROM creature WHERE guid IN (800007);
+-- INSERT INTO creature VALUES
+-- (800007, 32938, 603, 2, 1,0,0, 2011.48, -232.79, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0);
 -- mage:
-DELETE FROM creature WHERE guid IN (800008, 800010);
-INSERT INTO creature VALUES
-(800008, 33327, 603, 2, 128,0,0, 1978.49, -241.476, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0), -- aly mage
-(800010, 32938, 603, 2, 1,0,0, 1978.49, -241.476, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0);
+-- DELETE FROM creature WHERE guid IN (800008, 800010);
+-- INSERT INTO creature VALUES
+-- (800008, 33327, 603, 2, 128,0,0, 1978.49, -241.476, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0), -- aly mage
+-- (800010, 32938, 603, 2, 1,0,0, 1978.49, -241.476, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0);
 -- priest
-UPDATE creature SET position_x = 1997.88, position_y = -239.394 WHERE id = 33330;
-DELETE FROM creature WHERE guid IN (800009);
-INSERT INTO creature VALUES
-(800009, 32938, 603, 2, 1,0,0, 1997.88, -239.394, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0);
+-- UPDATE creature SET position_x = 1997.88, position_y = -239.394 WHERE id = 33330;
+-- DELETE FROM creature WHERE guid IN (800009);
+-- INSERT INTO creature VALUES
+-- (800009, 32938, 603, 2, 1,0,0, 1997.88, -239.394, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0);
+
+-- loot
+-- add Runed Orb and patterns
+DELETE FROM gameobject_loot_template WHERE entry = 26946 AND item IN (1, 45087) AND MinCountOrRef = -33117;
+INSERT INTO gameobject_loot_template VALUES
+(26946,     1, 10, 3, -33117, 1, 0, 0, 0), -- pattern
+(26946, 45087, 50, 4, 1,      1, 0, 0, 0); -- Runed Orb
+
+-- rare cache, despawned as default
+UPDATE gameobject SET spawntimesecs = -spawntimesecs WHERE id IN (194200, 194201);
