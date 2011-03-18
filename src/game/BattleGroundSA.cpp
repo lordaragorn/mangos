@@ -43,8 +43,7 @@
 BattleGroundSA::BattleGroundSA()
 {
     m_BgObjects.resize(BG_SA_MAXOBJ); // boats
-    //m_tDefender = urand(0,1) ? HORDE : ALLIANCE;
-    m_tDefender = HORDE;
+    m_tDefender = urand(0,1) ? HORDE : ALLIANCE;
     m_rCurrentRound = BG_SA_ROUND_ONE;
     m_bTimerEnabled = false;
 }
