@@ -1,5 +1,5 @@
 -- Instance Ulduar
--- Instance last changes: a608
+-- Instance last changes: a609
 
 -- teleporter
 UPDATE gameobject_template SET ScriptName = "go_ulduar_teleporter" WHERE entry = 194569;
@@ -663,11 +663,27 @@ DELETE FROM creature WHERE id IN (32938, 33325, 32901, 32941, 33333, 33328, 3290
 -- loot
 UPDATE gameobject SET spawnMask = 1 WHERE id = 194307;
 UPDATE gameobject SET spawnMask = 2 WHERE id = 194308;
--- add Runed Orb and patterns
-DELETE FROM gameobject_loot_template WHERE entry = 26946 AND (item = 1 AND MinCountOrRef = -33117 OR item = 45087);
-INSERT INTO gameobject_loot_template VALUES
-(26946,     1, 10, 3, -33117, 1, 0, 0, 0), -- pattern
-(26946, 45087, 50, 4, 1,      1, 0, 0, 0); -- Runed Orb
+
+-- 25man loot. 10man already in UDB
+DELETE FROM gameobject_loot_template WHERE entry = 26946;
+INSERT INTO gameobject_loot_template  VALUES
+(26946, 1, 10, 3, -33117, 1, 0, 0, 0),
+(26946, 45038, 7, 5, 1, 1, 0, 0, 0),
+(26946, 45087, 50, 4, 1, 1, 0, 0, 0),
+(26946, 45624, 100, 0, 1, 1, 0, 0, 0),
+(26946, 2, 100, 1, -26946, 2, 0, 0, 0),
+(26946, 3, 100, 2, -26946, 2, 0, 0, 0);
+
+DELETE FROM reference_loot_template WHERE entry = 26946;
+INSERT INTO reference_loot_template VALUES
+(26946, 45450, 0, 1, 1, 1, 0, 0, 0),
+(26946, 45451, 0, 1, 1, 1, 0, 0, 0),
+(26946, 45452, 0, 1, 1, 1, 0, 0, 0),
+(26946, 45453, 0, 1, 1, 1, 0, 0, 0),
+(26946, 45454, 0, 1, 1, 1, 0, 0, 0),
+(26946, 45632, 0, 2, 1, 1, 0, 0, 0),
+(26946, 45633, 0, 2, 1, 1, 0, 0, 0),
+(26946, 45634, 0, 2, 1, 1, 0, 0, 0);
 
 -- rare cache, despawned as default
 UPDATE gameobject SET spawntimesecs = -spawntimesecs WHERE id IN (194200, 194201);
