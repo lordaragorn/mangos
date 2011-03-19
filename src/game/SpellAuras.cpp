@@ -8441,6 +8441,9 @@ void Aura::PeriodicDummyTick()
                     // aura stack increase every 3 (data in m_miscvalue) seconds and decrease every 1s
                     SpellAuraHolder *holder = target->GetSpellAuraHolder(62039);
 
+                    // dmg dealing every second
+                    target->CastSpell(target, 62188, true);
+
                     // Reset reapply counter at move and decrease stack amount by 1
                     if (((Player*)target)->isMoving())
                     {
@@ -8452,10 +8455,6 @@ void Aura::PeriodicDummyTick()
                         m_modifier.m_miscvalue = 3;
                         return;
                     }
-
-                    // dmg dealing every second if at least 1 aura stack is present
-                    if (holder)
-                        target->CastSpell(target, 62188, true);
 
                     // We are standing at the moment, countdown
                     if (m_modifier.m_miscvalue > 0)
