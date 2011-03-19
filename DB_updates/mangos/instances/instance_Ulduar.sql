@@ -1,5 +1,5 @@
 -- Instance Ulduar
--- Instance last changes: a607
+-- Instance last changes: a608
 
 -- teleporter
 UPDATE gameobject_template SET ScriptName = "go_ulduar_teleporter" WHERE entry = 194569;
@@ -20,7 +20,7 @@ INSERT INTO gameobject_loot_template VALUES
 (26929, 45038, 10, 2, 1, 1, 0, 0, 0), -- Kologarn %
 (27079, 45038, 18, 7, 1, 1, 0, 0, 0), -- Freya normal
 (26962, 45038, 25, 7, 1, 1, 0, 0, 0), -- Freya hard
-(27068, 45038,  7, 5, 1, 1, 0, 0, 0); -- Hodir normal
+(26946, 45038,  7, 5, 1, 1, 0, 0, 0); -- Hodir normal
 
 DELETE FROM reference_loot_template WHERE item = 45038;
 INSERT INTO reference_loot_template VALUES
@@ -532,35 +532,35 @@ DELETE FROM gameobject_loot_template WHERE entry IN (26962, 27078, 27079, 27081)
 INSERT INTO gameobject_loot_template VALUES
 -- 10man normal mode
 (27078, 40753, 100, 0, 1, 1, 0, 0, 0), -- Emblem of Valor
--- (27078, 1, 100, 1, -27078, 1, 0, 0, 0), -- 1 random item
--- (27078, 45644, 0, 2, 1, 1, 0, 0, 0), -- 1 out of 3 tokens
--- (27078, 45645, 0, 2, 1, 1, 0, 0, 0),
--- (27078, 45646, 0, 2, 1, 1, 0, 0, 0),
--- (27078, 2, 100, 3, -27084, 1, 18, 603, 35), -- 1 elder up
--- (27078, 3, 100, 4, -27085, 1, 18, 603, 36), -- 2 elders up
+(27078, 1, 100, 1, -27078, 1, 0, 0, 0), -- 1 random item
+(27078, 45644, 0, 2, 1, 1, 0, 0, 0), -- 1 out of 3 tokens
+(27078, 45645, 0, 2, 1, 1, 0, 0, 0),
+(27078, 45646, 0, 2, 1, 1, 0, 0, 0),
+(27078, 2, 100, 3, -27084, 1, 18, 603, 35), -- 1 elder up
+(27078, 3, 100, 4, -27085, 1, 18, 603, 36), -- 2 elders up
 -- 10man hard mode
 (27081, 40753, 100, 0, 4, 4, 0, 0, 0), -- 4 Emblems of Valor
--- (27081, 1, 100, 1, -27078, 1, 0, 0, 0), -- 1 random item
--- (27081, 45644, 0, 2, 1, 1, 0, 0, 0), -- 1 out of 3 tokens
--- (27081, 45645, 0, 2, 1, 1, 0, 0, 0),
--- (27081, 45646, 0, 2, 1, 1, 0, 0, 0),
+(27081, 1, 100, 1, -27078, 1, 0, 0, 0), -- 1 random item
+(27081, 45644, 0, 2, 1, 1, 0, 0, 0), -- 1 out of 3 tokens
+(27081, 45645, 0, 2, 1, 1, 0, 0, 0),
+(27081, 45646, 0, 2, 1, 1, 0, 0, 0),
 (27081, 45087, 100, 4, 1, 1, 0, 0, 0), -- Runed Orb
--- (27081, 2, 100,  3, -27081, 1, 0, 0, 0), -- item hard mode
+(27081, 2, 100,  3, -27081, 1, 0, 0, 0), -- item hard mode
 -- 25man normal mode
 (27079, 45624, 100, 0, 1, 1, 0, 0, 0), -- Emblem of Conquest
--- (27079, 1, 100, 1, -27083, 2, 0, 0, 0), -- 2 random items
--- (27079, 3, 100, 3, -27079, 2, 0, 0, 0), -- 2 tokens
+(27079, 1, 100, 1, -27083, 2, 0, 0, 0), -- 2 random items
+(27079, 3, 100, 3, -27079, 2, 0, 0, 0), -- 2 tokens
 (27079, 45087, 75, 2, 1, 1, 0, 0, 0), -- Runed Orb
 (27079, 2, 10, 6, -33117, 1, 0, 0, 0), -- random pattern
 (27079, 4, 100, 4, -27086, 1, 18, 603, 35), -- 1 elder up
 (27079, 5, 100, 5, -27087, 1, 18, 603, 36), -- 2 elders up
 -- 25man hard mode
 (26962, 45624, 100, 0, 4, 4, 0, 0, 0), -- 4 Emblems of Conquest
--- (26962, 1, 100, 1, -27083, 2, 0, 0, 0), -- 2 random items
--- (26962, 3, 100, 3, -27079, 2, 0, 0, 0), -- 2 tokens
+(26962, 1, 100, 1, -27083, 2, 0, 0, 0), -- 2 random items
+(26962, 3, 100, 3, -27079, 2, 0, 0, 0), -- 2 tokens
 (26962, 45087, 90, 2, 1, 4, 0, 0, 0), -- up to 4 Runed Orbs
 (26962, 2, 10, 6, -33117, 1, 0, 0, 0), -- random pattern
--- (26962, 4, 100, 4, -27083, 1, 0, 0, 0); -- item hard mode
+(26962, 4, 100, 4, -27083, 1, 0, 0, 0); -- item hard mode
 
 DELETE FROM reference_loot_template WHERE entry IN (27078, 27079, 27081, 27082, 27083, 27084, 27085, 27086, 27087);
 INSERT INTO reference_loot_template VALUES
@@ -661,11 +661,13 @@ DELETE FROM creature WHERE id IN (32938, 33325, 32901, 32941, 33333, 33328, 3290
 -- (800009, 32938, 603, 2, 1,0,0, 1997.88, -239.394, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0);
 
 -- loot
+UPDATE gameobject SET spawnMask = 1 WHERE id = 194307;
+UPDATE gameobject SET spawnMask = 2 WHERE id = 194308;
 -- add Runed Orb and patterns
-DELETE FROM gameobject_loot_template WHERE entry = 27068 AND (item = 1 AND MinCountOrRef = -33117 OR item = 45087);
+DELETE FROM gameobject_loot_template WHERE entry = 26946 AND (item = 1 AND MinCountOrRef = -33117 OR item = 45087);
 INSERT INTO gameobject_loot_template VALUES
-(27068,     1, 10, 3, -33117, 1, 0, 0, 0), -- pattern
-(27068, 45087, 50, 4, 1,      1, 0, 0, 0); -- Runed Orb
+(26946,     1, 10, 3, -33117, 1, 0, 0, 0), -- pattern
+(26946, 45087, 50, 4, 1,      1, 0, 0, 0); -- Runed Orb
 
 -- rare cache, despawned as default
 UPDATE gameobject SET spawntimesecs = -spawntimesecs WHERE id IN (194200, 194201);
