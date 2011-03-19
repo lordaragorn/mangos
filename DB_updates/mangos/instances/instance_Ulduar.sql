@@ -1,5 +1,5 @@
 -- Instance Ulduar
--- Instance last changes: a605
+-- Instance last changes: a607
 
 -- teleporter
 UPDATE gameobject_template SET ScriptName = "go_ulduar_teleporter" WHERE entry = 194569;
@@ -20,7 +20,7 @@ INSERT INTO gameobject_loot_template VALUES
 (26929, 45038, 10, 2, 1, 1, 0, 0, 0), -- Kologarn %
 (27079, 45038, 18, 7, 1, 1, 0, 0, 0), -- Freya normal
 (26962, 45038, 25, 7, 1, 1, 0, 0, 0), -- Freya hard
-(26946, 45038,  7, 5, 1, 1, 0, 0, 0); -- Hodir normal
+(27068, 45038,  7, 5, 1, 1, 0, 0, 0); -- Hodir normal
 
 DELETE FROM reference_loot_template WHERE item = 45038;
 INSERT INTO reference_loot_template VALUES
@@ -662,10 +662,10 @@ DELETE FROM creature WHERE id IN (32938, 33325, 32901, 32941, 33333, 33328, 3290
 
 -- loot
 -- add Runed Orb and patterns
-DELETE FROM gameobject_loot_template WHERE entry = 26946 AND item IN (1, 45087) AND MinCountOrRef = -33117;
+DELETE FROM gameobject_loot_template WHERE entry = 27068 AND (item = 1 AND MinCountOrRef = -33117 OR item = 45087);
 INSERT INTO gameobject_loot_template VALUES
-(26946,     1, 10, 3, -33117, 1, 0, 0, 0), -- pattern
-(26946, 45087, 50, 4, 1,      1, 0, 0, 0); -- Runed Orb
+(27068,     1, 10, 3, -33117, 1, 0, 0, 0), -- pattern
+(27068, 45087, 50, 4, 1,      1, 0, 0, 0); -- Runed Orb
 
 -- rare cache, despawned as default
 UPDATE gameobject SET spawntimesecs = -spawntimesecs WHERE id IN (194200, 194201);
