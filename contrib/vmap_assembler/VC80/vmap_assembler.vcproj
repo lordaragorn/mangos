@@ -230,7 +230,11 @@
 				>
 			</File>
 			<File
+<<<<<<< HEAD
 				RelativePath="..\..\..\src\game\vmap\VMapTools.h"
+=======
+				RelativePath="..\..\..\dep\include\g3dlite\G3D\format.h"
+>>>>>>> pathfinding/mmaps_rewrite
 				>
 			</File>
 			<File

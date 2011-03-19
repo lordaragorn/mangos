@@ -37,6 +37,7 @@
 #include "DBCEnums.h"
 #include "MapPersistentStateMgr.h"
 #include "VMapFactory.h"
+#include "MoveMap.h"
 #include "BattleGroundMgr.h"
 
 Map::~Map()
@@ -54,6 +55,9 @@ Map::~Map()
         delete i_data;
         i_data = NULL;
     }
+
+    // unload instance specific navigation data
+    MMAP::MMapFactory::createOrGetMMapManager()->unloadMapInstance(m_TerrainData->GetMapId(), GetInstanceId());
 
     //release reference count
     if(m_TerrainData->Release())
