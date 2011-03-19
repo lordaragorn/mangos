@@ -69,9 +69,8 @@ void BattleGroundSA::PrepareRound()
             SpawnEvent(i, z, false);
     }
 
-    // some spirit healer?
-    m_ActiveEvents[5] = defender_occupier;
-    SpawnEvent(SA_EVENT_ADD_SPIR, defender_occupier, true);
+    // graveyards on beach and near relic
+    SpawnEvent(SA_EVENT_ADD_SPIR, m_tDefender == ALLIANCE ? 3 : 4, true);
 
     // despawn all bombs, vehicles, gates and NPCs
     SpawnEvent(SA_EVENT_ADD_VECH_E, 0, false);
@@ -437,6 +436,7 @@ void BattleGroundSA::StartingEventOpenDoors()
 
     SpawnEvent(SA_EVENT_ADD_NPC, 0, true);  // spawn NPCs (vehicles also)
     SpawnEvent(SA_EVENT_ADD_BOMB, 1, true); // spawn seaforium charges
+
     // set up graveyards
     for (uint8 i = 0; i < BG_SA_GRY_MAX; ++i)
     {
