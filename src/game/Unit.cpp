@@ -1088,12 +1088,7 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
                             if(spell->m_spellInfo->InterruptFlags & SPELL_INTERRUPT_FLAG_ABORT_ON_DMG)
                                 pVictim->InterruptSpell(CurrentSpellTypes(i));
                             else
-                            {
-                                // some spells should be considered as DoT, but are triggered spells
-                                // TODO: needs some research, maybe attribute SPELL_ATTR_EX3_UNK25
-                                if (!spellProto || spellProto && spellProto->Id != 62188) // Biting Cold (Hodir) exception
-                                    spell->Delayed();
-                            }
+                                spell->Delayed();
                         }
                     }
                 }

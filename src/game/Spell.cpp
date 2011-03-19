@@ -3015,6 +3015,7 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                     else if (m_spellInfo->Effect[effIndex] == SPELL_EFFECT_TRIGGER_SPELL)
                         targetUnitMap.push_back(m_caster);
                     break;
+                case SPELL_EFFECT_FRIEND_SUMMON:
                 case SPELL_EFFECT_SUMMON_PLAYER:
                     if (m_caster->GetTypeId()==TYPEID_PLAYER && !((Player*)m_caster)->GetSelectionGuid().IsEmpty())
                         if (Player* target = sObjectMgr.GetPlayer(((Player*)m_caster)->GetSelectionGuid()))
@@ -3071,11 +3072,6 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                         case SPELL_AURA_ADD_PCT_MODIFIER:
                             targetUnitMap.push_back(m_caster);
                             break;
-                        case SPELL_AURA_DUMMY:
-                        {
-                            SetTargetMap(effIndex, m_spellInfo->EffectImplicitTargetB[effIndex], targetUnitMap);
-                            return;
-                        }
                         case SPELL_AURA_PERIODIC_TRIGGER_SPELL:
                         case SPELL_AURA_PERIODIC_DAMAGE:
                         {
@@ -5902,9 +5898,12 @@ SpellCastResult Spell::CheckCast(bool strict)
                     return SPELL_FAILED_BAD_TARGETS;
 
                 Player* target = sObjectMgr.GetPlayer(((Player*)m_caster)->GetSelectionGuid());
-                if( !target || ((Player*)m_caster) == target || !target->IsInSameRaidWith((Player*)m_caster) )
+
+                if ( !target || ((Player*)m_caster) == target)
                     return SPELL_FAILED_BAD_TARGETS;
 
+                if (!target->IsInSameRaidWith((Player*)m_caster) && m_spellInfo->Id != 48955)
+                    return SPELL_FAILED_BAD_TARGETS;
                 // check if our map is dungeon
                 if( sMapStore.LookupEntry(m_caster->GetMapId())->IsDungeon() )
                 {
@@ -5916,6 +5915,21 @@ SpellCastResult Spell::CheckCast(bool strict)
                     if ( instance->levelMax && instance->levelMax < target->getLevel() )
                         return SPELL_FAILED_HIGHLEVEL;
                 }
+                break;
+            }
+            case SPELL_EFFECT_FRIEND_SUMMON:
+            {
+                if(m_caster->GetTypeId() != TYPEID_PLAYER)
+                    return SPELL_FAILED_BAD_TARGETS;
+
+                if(((Player*)m_caster)->GetSelectionGuid().IsEmpty())
+                    return SPELL_FAILED_BAD_TARGETS;
+
+                Player* target = sObjectMgr.GetPlayer(((Player*)m_caster)->GetSelectionGuid());
+
+                if (!target || !target->IsReferAFriendLinked(((Player*)m_caster)))
+                    return SPELL_FAILED_BAD_TARGETS;
+
                 break;
             }
             case SPELL_EFFECT_LEAP:
@@ -7252,6 +7266,7 @@ bool Spell::CheckTarget( Unit* target, SpellEffectIndex eff )
     // Check targets for LOS visibility (except spells without range limitations )
     switch(m_spellInfo->Effect[eff])
     {
+        case SPELL_EFFECT_FRIEND_SUMMON:
         case SPELL_EFFECT_SUMMON_PLAYER:                    // from anywhere
             break;
         case SPELL_EFFECT_DUMMY:
