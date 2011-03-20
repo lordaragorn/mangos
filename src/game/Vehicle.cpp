@@ -72,6 +72,17 @@ void VehicleKit::RemoveAllPassengers()
     }
 }
 
+bool VehicleKit::HasUsableSeat() const
+{
+    for (SeatMap::const_iterator seat = m_Seats.begin(); seat != m_Seats.end(); seat++)
+    {
+        if (seat->second.seatInfo->m_flags & SEAT_FLAG_CAN_CONTROL)
+            return true;
+    }
+
+    return false;
+}
+
 bool VehicleKit::HasEmptySeat(int8 seatId) const
 {
     SeatMap::const_iterator seat = m_Seats.find(seatId);
@@ -222,6 +233,13 @@ bool VehicleKit::AddPassenger(Unit *passenger, int8 seatId)
             data2 << (uint32)(2);
             m_pBase->SendMessageToSet(&data2,false);
         }
+    }
+
+    // changing seats enabled for controlable vehicles
+    if (passenger->GetTypeId() == TYPEID_PLAYER)
+    {
+        if (HasUsableSeat())
+            ((Player*)passenger)->SetClientControl(m_pBase, 1);
     }
 
     passenger->SendMonsterMoveTransport(m_pBase, SPLINETYPE_FACINGANGLE, SPLINEFLAG_UNKNOWN5, 0, 0.0f);
