@@ -13,7 +13,7 @@ UPDATE quest_template SET ReqCreatureOrGOId1 = 33448 WHERE entry = 13680;
 
 DELETE FROM gossip_menu_option WHERE menu_id = 10340 AND id = 1;
 INSERT INTO gossip_menu_option VALUES
-(10340, 1, 0, 'I am ready to fight!', 1, 1, -1, 0, 33447, 0, 0, NULL, 9, 13680, 0, 0, 0, 0, 0, 0, 0);
+(10340, 1, 0, 'I am ready to fight!', 1, 1, -1, 0, 50102, 0, 0, NULL, 9, 13680, 0, 0, 0, 0, 0, 0, 0);
 
 DELETE FROM gossip_scripts WHERE id = 50102;
 INSERT INTO gossip_scripts VALUES
