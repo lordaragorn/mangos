@@ -364,6 +364,7 @@ class MANGOS_DLL_SPEC Aura
         void HandleAuraInitializeImages(bool Apply, bool Real);
         void HandleAuraCloneCaster(bool Apply, bool Real);
         void HandleAuraReflectSpells(bool Apply, bool Real);
+        void HandleAuraSetVehicle(bool apply, bool Real);
 
         virtual ~Aura();
 

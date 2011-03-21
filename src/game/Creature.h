@@ -81,6 +81,7 @@ struct CreatureInfo
     uint32  maxlevel;
     uint32  minhealth;
     uint32  maxhealth;
+    uint8   powerType;
     uint32  minmana;
     uint32  maxmana;
     uint32  armor;
@@ -122,13 +123,14 @@ struct CreatureInfo
     int32   resistance6;
     uint32  spells[CREATURE_MAX_SPELLS];
     uint32  PetSpellDataId;
+    uint32  VehicleId;
     uint32  mingold;
     uint32  maxgold;
     char const* AIName;
     uint32  MovementType;
     uint32  InhabitType;
     float   unk16;
-    float   unk17;
+    float   power_mod;
     bool    RacialLeader;
     uint32  questItems[6];
     uint32  movementId;
@@ -419,7 +421,6 @@ enum CreatureSubtype
     CREATURE_SUBTYPE_GENERIC,                               // new Creature
     CREATURE_SUBTYPE_PET,                                   // new Pet
     CREATURE_SUBTYPE_TOTEM,                                 // new Totem
-    CREATURE_SUBTYPE_VEHICLE,                               // new Vehicle
     CREATURE_SUBTYPE_TEMPORARY_SUMMON,                      // new TemporarySummon
 };
 
@@ -450,7 +451,6 @@ class MANGOS_DLL_SPEC Creature : public Unit
 
         CreatureSubtype GetSubtype() const { return m_subtype; }
         bool IsPet() const { return m_subtype == CREATURE_SUBTYPE_PET; }
-        bool IsVehicle() const { return m_subtype == CREATURE_SUBTYPE_VEHICLE; }
         bool IsTotem() const { return m_subtype == CREATURE_SUBTYPE_TOTEM; }
         bool IsTemporarySummon() const { return m_subtype == CREATURE_SUBTYPE_TEMPORARY_SUMMON; }
 
@@ -666,6 +666,12 @@ class MANGOS_DLL_SPEC Creature : public Unit
         virtual uint8 GetPetAutoSpellSize() const { return CREATURE_MAX_SPELLS; }
         virtual uint32 GetPetAutoSpellOnPos(uint8 pos) const
         {
+            if (!m_charmInfo)
+            {
+                sLog.outError("ERROR: Creature with entry %u has no charm info!", GetEntry());
+                return 0;
+            }
+
             if (pos >= CREATURE_MAX_SPELLS || m_charmInfo->GetCharmSpell(pos)->GetType() != ACT_ENABLED)
                 return 0;
             else
@@ -687,7 +693,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
         void SetVirtualItem(VirtualItemSlot slot, uint32 item_id) { SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + slot, item_id); }
 
     protected:
-        bool CreateFromProto(uint32 guidlow,uint32 Entry, Team team, const CreatureData *data = NULL, GameEventCreatureData const* eventData =NULL);
+        bool CreateFromProto(ObjectGuid guid,uint32 Entry, Team team, const CreatureData *data = NULL, GameEventCreatureData const* eventData =NULL);
         bool InitEntry(uint32 entry, const CreatureData* data = NULL, GameEventCreatureData const* eventData = NULL);
 
         uint32 m_groupLootTimer;                            // (msecs)timer used for group loot
@@ -714,7 +720,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
         float m_respawnradius;
 
         CreatureSubtype m_subtype;                          // set in Creatures subclasses for fast it detect without dynamic_cast use
-        void RegenerateMana();
+        void Regenerate(Powers power);
         void RegenerateHealth();
         MovementGeneratorType m_defaultMovementType;
         Cell m_currentCell;                                 // store current cell where creature listed
