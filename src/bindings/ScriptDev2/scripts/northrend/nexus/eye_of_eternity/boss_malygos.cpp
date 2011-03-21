@@ -61,7 +61,7 @@ enum
     SPELL_ARCANE_BARRAGE            = 50804, // hack, right spell is 56397
 
     //////////////// PHASE 3 ////////////////
-    SPELL_HOVER                     = 57764,
+    SPELL_FLY                       = 34873,
     SPELL_STATIC_FIELD_MISSILE      = 57430,
     SPELL_STATIC_FIELD              = 57428,
     SPELL_SURGE_OF_POWER            = 57407, // this is on one target
@@ -438,6 +438,8 @@ struct MANGOS_DLL_DECL boss_malygosAI : public ScriptedAI
         {
             pDisk->setFaction(35);
             pDisk->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            pDisk->CastSpell(pDisk, SPELL_FLY, true);
+            pDisk->SetSpeedRate(MOVE_FLIGHT, 4.0f);
         }
         uint32 uiEntry = pSummoned->GetEntry();
         if (uiEntry == NPC_NEXUS_LORD || uiEntry == NPC_SCION_OF_ETERNITY)
@@ -484,12 +486,15 @@ struct MANGOS_DLL_DECL boss_malygosAI : public ScriptedAI
                 for (Map::PlayerList::const_iterator itr = lPlayers.begin(); itr != lPlayers.end(); ++itr)
                     if (Player* pPlayer = itr->getSource())
                     {
-                        if (Vehicle* pTemp = pPlayer->SummonVehicle(NPC_WYRMREST_SKYTALON, pPlayer->GetPositionX(), pPlayer->GetPositionY(), FLOOR_Z - 40.0f, 0.0f, 165))
+                        if (Creature* pTemp = pPlayer->SummonCreature(NPC_WYRMREST_SKYTALON, pPlayer->GetPositionX(), pPlayer->GetPositionY(), FLOOR_Z - 40.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN, 7*DAY*IN_MILLISECONDS))
                         {
                             pTemp->AddSplineFlag(SPLINEFLAG_FLYING);
-                            pTemp->CastSpell(pTemp, SPELL_HOVER, true);
-                            pPlayer->EnterVehicle(pTemp, 1);
-                            m_creature->AddThreat(pTemp, 100.0f);
+                            pTemp->SetSpeedRate(MOVE_FLIGHT, 4.0f, true);
+                            pTemp->CastSpell(pTemp, SPELL_FLY, true);
+                            m_creature->SetInCombatWith(pTemp);
+                            pTemp->SetInCombatWith(m_creature);
+                            if (pTemp->CreateVehicleKit(165))
+                                pPlayer->EnterVehicle(pTemp->GetVehicleKit());
                         }
                     }
         }
@@ -504,10 +509,10 @@ struct MANGOS_DLL_DECL boss_malygosAI : public ScriptedAI
             if (!lPlayers.isEmpty())
                 for (Map::PlayerList::const_iterator itr = lPlayers.begin(); itr != lPlayers.end(); ++itr)
                     if (Player* pPlayer = itr->getSource())
-                        if (Vehicle *pVeh = (Vehicle*)m_pInstance->instance->GetAnyTypeCreature(pPlayer->GetVehicleGUID()))
+                        if (VehicleKit *pVehKit = pPlayer->GetVehicle())
                         {
                             pPlayer->ExitVehicle();
-                            pVeh->ForcedDespawn(500);
+                            ((Creature*)pVehKit->GetBase())->ForcedDespawn(500);
                         }
         }
     }
@@ -583,9 +588,39 @@ struct MANGOS_DLL_DECL boss_malygosAI : public ScriptedAI
                 m_uiShellTimer = urand(15000, 17000);
                 m_uiSubPhase = 0;
                 for (uint8 i = 0; i < (m_bIsRegularMode ? NEXUS_LORD_COUNT : NEXUS_LORD_COUNT_H); ++i)
+                {
                     m_creature->SummonCreature(NPC_NEXUS_LORD, urand(PLATFORM_MIN_X, PLATFORM_MAX_X), urand(PLATFORM_MIN_Y, PLATFORM_MAX_Y), FLOOR_Z+10.0f+urand(0, 15), 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
+
+                    /*if (Creature *pTmp = m_creature->SummonCreature(NPC_NEXUS_LORD, urand(PLATFORM_MIN_X, PLATFORM_MAX_X), urand(PLATFORM_MIN_Y, PLATFORM_MAX_Y), FLOOR_Z+10.0f+urand(0, 15), 0, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                    {
+                        if (Creature* pDisk = pTmp->SummonCreature(NPC_HOVER_DISK, pTmp->GetPositionX(), pTmp->GetPositionY(), pTmp->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                        {
+                            pDisk->setFaction(35);
+                            pDisk->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                            pDisk->CastSpell(pDisk, SPELL_FLY, true);
+                            pDisk->SetSpeedRate(MOVE_FLIGHT, 4.0f);
+                            if (pDisk->CreateVehicleKit(223))
+                                pTmp->EnterVehicle(pDisk->GetVehicleKit());
+                        }
+                    }*/
+                }
                 for (uint8 i = 0; i < (m_bIsRegularMode ? SCION_OF_ETERNITY_COUNT : SCION_OF_ETERNITY_COUNT_H); ++i)
-                    m_creature->SummonCreature(NPC_SCION_OF_ETERNITY, urand(PLATFORM_MIN_X, PLATFORM_MAX_X), urand(PLATFORM_MIN_Y, PLATFORM_MAX_Y), FLOOR_Z+10.0f+urand(0, 15), 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
+                {
+                     m_creature->SummonCreature(NPC_SCION_OF_ETERNITY, urand(PLATFORM_MIN_X, PLATFORM_MAX_X), urand(PLATFORM_MIN_Y, PLATFORM_MAX_Y), FLOOR_Z+10.0f+urand(0, 15), 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
+
+                    /*if (Creature *pTmp = m_creature->SummonCreature(NPC_SCION_OF_ETERNITY, urand(PLATFORM_MIN_X, PLATFORM_MAX_X), urand(PLATFORM_MIN_Y, PLATFORM_MAX_Y), FLOOR_Z+10.0f+urand(0, 15), 0, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                    {
+                        if (Creature* pDisk = pTmp->SummonCreature(NPC_HOVER_DISK, pTmp->GetPositionX(), pTmp->GetPositionY(), pTmp->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                        {
+                            pDisk->setFaction(35);
+                            pDisk->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                            pDisk->CastSpell(pDisk, SPELL_FLY, true);
+                            pDisk->SetSpeedRate(MOVE_FLIGHT, 4.0f);
+                            if (pDisk->CreateVehicleKit(223))
+                                pTmp->EnterVehicle(pDisk->GetVehicleKit());
+                        }
+                    }*/
+                }
                 m_uiTimer = 5000;
                 return;
             }
@@ -935,7 +970,7 @@ struct MANGOS_DLL_DECL boss_malygosAI : public ScriptedAI
                     m_uiTimer = 2000;
                 }
 
-                Map* pMap = m_creature->GetMap();
+                /*Map* pMap = m_creature->GetMap();
                 if (pMap)
                 {
                     Map::PlayerList const &lPlayers = pMap->GetPlayers();
@@ -949,7 +984,7 @@ struct MANGOS_DLL_DECL boss_malygosAI : public ScriptedAI
                         else
                             pPlayer->ApplySpellImmune(0, IMMUNITY_SCHOOL, SPELL_SCHOOL_MASK_ARCANE, false);
                     }
-                }
+                }*/
 
                 if (m_uiPhase == PHASE_DRAGONS)
                     return;
@@ -1045,7 +1080,7 @@ struct MANGOS_DLL_DECL boss_malygosAI : public ScriptedAI
                     DoScriptText(SAY_INTRO_PHASE3, m_creature);
 
                     m_uiSubPhase = SUBPHASE_DESTROY_PLATFORM_3;
-                    m_uiTimer = 4000;
+                    m_uiTimer = 2000;
                 }
                 else
                     m_uiTimer -= uiDiff;
@@ -1137,16 +1172,16 @@ struct MANGOS_DLL_DECL boss_malygosAI : public ScriptedAI
                 {
                     if (Unit* pRandomTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     {
-                        Creature *pVictim;
+                        Unit *pVictim;
 
                         if (pRandomTarget->GetEntry() == NPC_WYRMREST_SKYTALON)
                         {
-                            pVictim = (Creature*)pRandomTarget;
+                            pVictim = pRandomTarget;
                         }
                         else if (pRandomTarget->GetTypeId() == TYPEID_PLAYER)
                         {
-                            if (m_pInstance)
-                                pVictim = m_pInstance->instance->GetAnyTypeCreature(ObjectGuid(pRandomTarget->GetVehicleGUID()));
+                            if (VehicleKit *pVehKit = pRandomTarget->GetVehicleKit())
+                                pVictim = pVehKit->GetBase();
                         }
 
                         if (pVictim)

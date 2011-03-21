@@ -8450,7 +8450,7 @@ void Aura::PeriodicDummyTick()
                         if (holder)
                         {
                             if (holder->ModStackAmount(-1))
-                                target->RemoveSpellAuraHolder(holder);
+                                target->RemoveAurasDueToSpell(62039);
                         }
                         m_modifier.m_miscvalue = 3;
                         return;

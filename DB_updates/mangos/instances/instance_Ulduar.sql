@@ -1,5 +1,5 @@
 -- Instance Ulduar
--- Instance last changes: a609
+-- Instance last changes: a614
 
 -- teleporter
 UPDATE gameobject_template SET ScriptName = "go_ulduar_teleporter" WHERE entry = 194569;
@@ -489,7 +489,7 @@ UPDATE creature_template SET ScriptName = 'boss_elder_stonebark' WHERE entry = 3
 UPDATE creature_template SET ScriptName = 'mob_iron_roots' WHERE entry IN (33088, 33168);
 UPDATE creature_template SET ScriptName = 'mob_freya_ground' WHERE entry IN (33215, 33228, 33170, 33050, 34129);
 UPDATE creature_template SET ScriptName = 'mob_freya_spawned' WHERE entry IN (32916, 32919, 33202, 33203, 32918);
-
+UPDATE `creature_template` SET `mechanic_immune_mask` = 619397115 WHERE `entry` IN (32906, 32915, 32913, 32914, 33360, 33392, 33393, 33391);
 -- fill some missing data in creature_template (health, level etc.)
 -- UPDATE creature_template SET minhealth = 5856900, maxhealth = 5856900 WHERE entry = 33391; -- Brightleaf 25man
 -- UPDATE creature_template SET minlevel = 80, maxlevel = 80, faction_A = 14, faction_H = 14, armor = 10673, minhealth = 18270, maxhealth = 18270 WHERE entry = 33168; -- Strengthened Iron Roots 10man
@@ -602,6 +602,7 @@ INSERT INTO reference_loot_template VALUES
 
 -- Hodir
 UPDATE creature_template SET ScriptName = 'boss_hodir' WHERE entry = 32845;
+UPDATE `creature_template` SET `mechanic_immune_mask` = 619397115 WHERE `entry` IN (32845, 32846);
 UPDATE creature SET phaseMask = 1 WHERE id IN (32845, 32846, 33325, 32901, 32941, 33333, 33328, 32900, 33332, 32950, 32893, 33327, 33331, 32946, 32897, 33326, 32948, 33330);
 UPDATE creature_template SET ScriptName = 'mob_toasty_fire' WHERE entry = 33342;
 UPDATE creature_template SET ScriptName = 'mob_flashFreeze' WHERE entry IN (32926);
@@ -687,3 +688,5 @@ INSERT INTO reference_loot_template VALUES
 
 -- rare cache, despawned as default
 UPDATE gameobject SET spawntimesecs = -spawntimesecs WHERE id IN (194200, 194201);
+UPDATE gameobject SET spawnMask = 1 WHERE id = 194200;
+UPDATE gameobject SET spawnMask = 2 WHERE id = 194201;

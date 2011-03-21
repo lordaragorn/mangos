@@ -921,7 +921,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
             }
 
             //Phase 1, waves of adds
-            if(m_uiWaveNumber < 1)
+            if(m_uiWaveNumber < 6)
             {
                 if(m_uiSummonTimer < uiDiff)
                 {
@@ -1079,8 +1079,8 @@ struct MANGOS_DLL_DECL mob_freya_groundAI : public ScriptedAI
     {
         m_uiNatureBomb_Timer        = urand(9000,11000);
         m_uiDieTimer                = 60000;
-        m_uiEonarsGift_Timer        = urand(11000,13000);
-        m_uiNonSelectable_Timer     = 5000;
+        m_uiEonarsGift_Timer        = 15000; // 12sec since it is targetable
+        m_uiNonSelectable_Timer     = 3000;
         m_uiUnstableEnergy_Timer    = 10500;
         m_uiGrow_Timer              = 0;
         m_bHasGrow                  = true;
