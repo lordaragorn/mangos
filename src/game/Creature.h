@@ -666,10 +666,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
         virtual uint32 GetPetAutoSpellOnPos(uint8 pos) const
         {
             if (!m_charmInfo)
-            {
-                sLog.outError("ERROR: Creature with entry %u has no charm info!", GetEntry());
                 return 0;
-            }
 
             if (pos >= CREATURE_MAX_SPELLS || m_charmInfo->GetCharmSpell(pos)->GetType() != ACT_ENABLED)
                 return 0;
