@@ -137,12 +137,11 @@ int8 VehicleKit::GetNextEmptySeat(int8 seatId, bool next) const
 bool VehicleKit::AddPassenger(Unit *passenger, int8 seatId)
 {
     SeatMap::iterator seat;
-    VehicleSeatEntry const *seatInfo = seat->second.seatInfo;
 
     if (seatId < 0) // no specific seat requirement
     {
         for (seat = m_Seats.begin(); seat != m_Seats.end(); ++seat)
-            if (!seat->second.passenger && (seatInfo->IsUsable() || (seatInfo->m_flags & SEAT_FLAG_UNCONTROLLED)))
+            if (!seat->second.passenger && (seat->second.seatInfo->IsUsable() || (seat->second.seatInfo->m_flags & SEAT_FLAG_UNCONTROLLED)))
                 break;
 
         if (seat == m_Seats.end()) // no available seat
@@ -158,6 +157,8 @@ bool VehicleKit::AddPassenger(Unit *passenger, int8 seatId)
         if (seat->second.passenger)
             return false;
     }
+
+    VehicleSeatEntry const *seatInfo = seat->second.seatInfo;
 
     // trying to enter a noncontrollable seat on a controllable vehicle with no charmer.
     // player will not be able to leave the seat, so we must prevent this
