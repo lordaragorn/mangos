@@ -57,12 +57,15 @@ VehicleKit::~VehicleKit()
 {
 }
 
-void VehicleKit::RemoveAllPassengers()
+void VehicleKit::RemoveAllPassengers(bool playersOnly)
 {
     for (SeatMap::iterator itr = m_Seats.begin(); itr != m_Seats.end(); ++itr)
     {
         if (Unit *passenger = itr->second.passenger)
         {
+            if (playersOnly && passenger->GetTypeId() != TYPEID_PLAYER)
+                continue;
+
             passenger->ExitVehicle();
 
             // remove creatures of player mounts
@@ -80,6 +83,16 @@ bool VehicleKit::HasEmptySeat(int8 seatId) const
         return false;
 
     return !seat->second.passenger;
+}
+
+bool VehicleKit::HasControllableSeat() const
+{
+    for (SeatMap::const_iterator seat = m_Seats.begin(); seat != m_Seats.end(); ++seat)
+    {
+        if (seat->second.seatInfo->m_flags & SEAT_FLAG_CAN_CONTROL)
+            return true;
+    }
+    return false;
 }
 
 Unit *VehicleKit::GetPassenger(int8 seatId) const
@@ -124,11 +137,12 @@ int8 VehicleKit::GetNextEmptySeat(int8 seatId, bool next) const
 bool VehicleKit::AddPassenger(Unit *passenger, int8 seatId)
 {
     SeatMap::iterator seat;
+    VehicleSeatEntry const *seatInfo = seat->second.seatInfo;
 
     if (seatId < 0) // no specific seat requirement
     {
         for (seat = m_Seats.begin(); seat != m_Seats.end(); ++seat)
-            if (!seat->second.passenger && (seat->second.seatInfo->IsUsable() || (seat->second.seatInfo->m_flags & SEAT_FLAG_UNCONTROLLED)))
+            if (!seat->second.passenger && (seatInfo->IsUsable() || (seatInfo->m_flags & SEAT_FLAG_UNCONTROLLED)))
                 break;
 
         if (seat == m_Seats.end()) // no available seat
@@ -145,10 +159,19 @@ bool VehicleKit::AddPassenger(Unit *passenger, int8 seatId)
             return false;
     }
 
+    // trying to enter a noncontrollable seat on a controllable vehicle with no charmer.
+    // player will not be able to leave the seat, so we must prevent this
+    if (passenger->GetTypeId() == TYPEID_PLAYER)
+    {
+        if (HasControllableSeat() && !(seatInfo->m_flags & SEAT_FLAG_CAN_CONTROL) && m_pBase->GetCharmerGuid() == ObjectGuid())
+        {
+            RemovePassenger(passenger);
+            return false;
+        }
+    }
+
     seat->second.passenger = passenger;
     passenger->addUnitState(UNIT_STAT_ON_VEHICLE);
-
-    VehicleSeatEntry const *seatInfo = seat->second.seatInfo;
 
     passenger->m_movementInfo.AddMovementFlag(MOVEFLAG_ONTRANSPORT);
     passenger->m_movementInfo.SetTransportData(m_pBase->GetGUID(),
@@ -167,7 +190,7 @@ bool VehicleKit::AddPassenger(Unit *passenger, int8 seatId)
         passenger->SendMessageToSet(&data, true);
     }
 
-    if (seat->second.seatInfo->m_flags & SEAT_FLAG_UNATTACKABLE || seat->second.seatInfo->m_flags & SEAT_FLAG_CAN_CONTROL)
+    if (seatInfo->m_flags & SEAT_FLAG_UNATTACKABLE || seat->second.seatInfo->m_flags & SEAT_FLAG_CAN_CONTROL)
     {
         passenger->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         passenger->RemoveSpellsCausingAura(SPELL_AURA_MOD_SHAPESHIFT);
@@ -185,7 +208,7 @@ bool VehicleKit::AddPassenger(Unit *passenger, int8 seatId)
 
         passenger->SetCharm(m_pBase);
 
-        if(m_pBase->HasAuraType(SPELL_AURA_FLY) || m_pBase->HasAuraType(SPELL_AURA_MOD_FLIGHT_SPEED))
+        if(m_pBase->HasAuraType(SPELL_AURA_FLY))
         {
             WorldPacket data;
             data.Initialize(SMSG_MOVE_SET_CAN_FLY, 12);
@@ -269,7 +292,7 @@ void VehicleKit::RemovePassenger(Unit *passenger)
     {
         // charm info is lost, so passengers leave the vehicle
         // TODO: maybe the charm info and veh controling should be passed to another passenger?
-        RemoveAllPassengers();
+        RemoveAllPassengers(true);
 
         passenger->SetCharm(NULL);
         passenger->RemoveSpellsCausingAura(SPELL_AURA_CONTROL_VEHICLE);

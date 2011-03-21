@@ -55,13 +55,14 @@ public:
     void Reset();
     void InstallAllAccessories(uint32 entry);
 
+    bool HasControllableSeat() const;
     bool HasEmptySeat(int8 seatId) const;
     Unit *GetPassenger(int8 seatId) const;
     int8 GetNextEmptySeat(int8 seatId, bool next) const;
     bool AddPassenger(Unit *passenger, int8 seatId = -1);
     void RemovePassenger(Unit *passenger);
     void RelocatePassengers(float x, float y, float z, float ang);
-    void RemoveAllPassengers();
+    void RemoveAllPassengers(bool playersOnly = false);
     VehicleSeatEntry const* GetSeatInfo(Unit* passenger);
 
     uint32 GetVehicleId() const { return m_vehicleInfo->m_ID; }
