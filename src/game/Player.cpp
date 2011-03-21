@@ -19772,13 +19772,27 @@ void Player::InitPrimaryProfessions()
 void Player::SendComboPoints()
 {
     Unit *combotarget = ObjectAccessor::GetUnit(*this, m_comboTargetGuid);
-    if (combotarget)
-    {
-        WorldPacket data(SMSG_UPDATE_COMBO_POINTS, combotarget->GetPackGUID().size()+1);
-        data << combotarget->GetPackGUID();
-        data << uint8(m_comboPoints);
-        GetSession()->SendPacket(&data);
-    }
+    if (!combotarget)
+        return;
+
+    WorldPacket data;
+
+    if (VehicleKit *pVehKit = GetVehicle())
+     {
+       if (Unit *pVehicle = pVehKit->GetBase())
+       {
+           data.Initialize(SMSG_PET_UPDATE_COMBO_POINTS, pVehicle->GetPackGUID().size()+combotarget->GetPackGUID().size()+1);
+           data << pVehicle->GetPackGUID();
+       }
+       else
+           return;
+     }
+    else
+        data.Initialize(SMSG_UPDATE_COMBO_POINTS, combotarget->GetPackGUID().size()+1);
+
+    data << combotarget->GetPackGUID();
+    data << uint8(m_comboPoints);
+    GetSession()->SendPacket(&data);
 }
 
 void Player::AddComboPoints(Unit* target, int8 count)
