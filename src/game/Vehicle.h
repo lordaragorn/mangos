@@ -55,7 +55,6 @@ public:
     void Reset();
     void InstallAllAccessories(uint32 entry);
 
-    bool HasUsableSeat() const;
     bool HasEmptySeat(int8 seatId) const;
     Unit *GetPassenger(int8 seatId) const;
     int8 GetNextEmptySeat(int8 seatId, bool next) const;
