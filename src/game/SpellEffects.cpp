@@ -8155,13 +8155,24 @@ void Spell::EffectAddComboPoints(SpellEffectIndex /*eff_idx*/)
     if(!unitTarget)
         return;
 
+    Player *pPlayer;
+
     if(m_caster->GetTypeId() != TYPEID_PLAYER)
-        return;
+    {
+        if (m_caster->GetObjectGuid().GetHigh() == HIGHGUID_VEHICLE)
+        {
+            if (m_caster->GetCharmer() && m_caster->GetCharmer()->GetTypeId() == TYPEID_PLAYER)
+                pPlayer = (Player*)m_caster->GetCharmer();
+        }
+    }
+    else
+        pPlayer = (Player*)m_caster;
 
     if(damage <= 0)
         return;
 
-    ((Player*)m_caster)->AddComboPoints(unitTarget, damage);
+    if (pPlayer)
+        pPlayer->AddComboPoints(unitTarget, damage);
 }
 
 void Spell::EffectDuel(SpellEffectIndex eff_idx)
