@@ -267,6 +267,10 @@ void VehicleKit::RemovePassenger(Unit *passenger)
 
     if (seat->second.seatInfo->m_flags & SEAT_FLAG_CAN_CONTROL)
     {
+        // charm info is lost, so passengers leave the vehicle
+        // TODO: maybe the charm info and veh controling should be passed to another passenger?
+        RemoveAllPassengers();
+
         passenger->SetCharm(NULL);
         passenger->RemoveSpellsCausingAura(SPELL_AURA_CONTROL_VEHICLE);
 
