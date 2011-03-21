@@ -536,6 +536,8 @@ void Unit::RemoveSpellbyDamageTaken(AuraType auraType, uint32 damage)
                     case 62861:
                     case 58373:                               // Glyph of Hamstring
                     case 23694:                               // Improved Hamstring
+                    case 61969:                               // Flash Freeze (Hodir)
+                    case 62469:                               // Freeze (Hodir)
                         // don't remove
                         break;
                     default:
@@ -1087,7 +1089,12 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
                             if(spell->m_spellInfo->InterruptFlags & SPELL_INTERRUPT_FLAG_ABORT_ON_DMG)
                                 pVictim->InterruptSpell(CurrentSpellTypes(i));
                             else
-                                spell->Delayed();
+                            {
+                                // some spells should be considered as DoT, but are triggered spells
+                                // TODO: needs some research, maybe attribute SPELL_ATTR_EX3_UNK25
+                                if (!spellProto || spellProto && spellProto->Id != 62188) // Biting Cold (Hodir) exception
+                                    spell->Delayed();
+                            }
                         }
                     }
                 }
