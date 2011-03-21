@@ -1,5 +1,5 @@
 -- Instance Eye of Eternity
--- Instance last changes: a432
+-- Instance last changes: a612
 
 -- Set instance script
 UPDATE instance_template SET ScriptName = 'instance_eye_of_eternity' WHERE map = 616;
@@ -34,9 +34,16 @@ INSERT INTO `spell_script_target` VALUES
 (56505, 1, 28859); -- Surge of Power breath dummy: 30334 casts on Malygos 28859
 
 -- Fix Wyrmrest drakes creature info
-UPDATE creature_template SET minhealth = 100000, maxhealth = 100000 WHERE entry = 32535;
+UPDATE creature_template SET PowerType = 3, minhealth = 100000, maxhealth = 100000, Spell1 = 56091, Spell2 = 56092, Spell3 = 57090, Spell4 = 57143, Spell5 = 57108, Spell6 = 57092 WHERE entry = 32535;
+
+-- hover disk
+DELETE FROM npc_spellclick_spells WHERE npc_entry = 30248;
+INSERT INTO npc_spellclick_spells VALUES
+(30248, 75648, 0, 0, 0, 1);
+
+-- old veh patch
 -- allow drakes to be healed and use proper spell2 entry
-UPDATE vehicle_data SET flags = flags|0x0010, Spell2 = 56092 WHERE entry = 165;
+-- UPDATE vehicle_data SET flags = flags|0x0010, Spell2 = 56092 WHERE entry = 165;
 
 -- Hover Disk
 -- unused until casting from vehicles get implemented
