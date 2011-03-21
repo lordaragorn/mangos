@@ -602,6 +602,7 @@ INSERT INTO reference_loot_template VALUES
 
 -- Hodir
 UPDATE creature_template SET ScriptName = 'boss_hodir' WHERE entry = 32845;
+UPDATE `creature_template` SET `mechanic_immune_mask` = 619397115 WHERE `entry` IN (32845, 32846);
 UPDATE creature SET phaseMask = 1 WHERE id IN (32845, 32846, 33325, 32901, 32941, 33333, 33328, 32900, 33332, 32950, 32893, 33327, 33331, 32946, 32897, 33326, 32948, 33330);
 UPDATE creature_template SET ScriptName = 'mob_toasty_fire' WHERE entry = 33342;
 UPDATE creature_template SET ScriptName = 'mob_flashFreeze' WHERE entry IN (32926);
