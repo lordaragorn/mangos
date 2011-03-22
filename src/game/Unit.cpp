@@ -9354,12 +9354,20 @@ int32 Unit::CalculateBaseSpellDuration(SpellEntry const* spellProto, uint32* per
     if (duration < 0)
         return duration;
 
+    Player *pComboOwnerPlayer = NULL;
+
     if (GetTypeId() == TYPEID_PLAYER)
+        pComboOwnerPlayer = (Player*)this;
+
+    if (GetVehicleKit() && GetCharmer() && GetCharmer()->GetTypeId() == TYPEID_PLAYER)
+        pComboOwnerPlayer = (Player*)GetCharmer();
+
+    if (pComboOwnerPlayer)
     {
         int32 maxduration = GetSpellMaxDuration(spellProto);
 
         if (duration != maxduration)
-            duration += int32((maxduration - duration) * ((Player*)this)->GetComboPoints() / 5);
+            duration += int32((maxduration - duration) * pComboOwnerPlayer->GetComboPoints() / 5);
     }
 
     Player* modOwner = GetSpellModOwner();
