@@ -329,7 +329,7 @@ void Unit::Update( uint32 update_diff, uint32 p_time )
         getThreatManager().UpdateForClient(update_diff);
 
     // update combat timer only for players and pets
-    if (isInCombat() && (GetTypeId() == TYPEID_PLAYER || ((Creature*)this)->IsPet() || ((Creature*)this)->isCharmed()))
+    if (isInCombat() && GetCharmerOrOwnerPlayerOrPlayerItself())
     {
         // Check UNIT_STAT_MELEE_ATTACKING or UNIT_STAT_CHASE (without UNIT_STAT_FOLLOW in this case) so pets can reach far away
         // targets without stopping half way there and running off.
@@ -11126,13 +11126,8 @@ void Unit::MonsterJump(float x, float y, float z, float o, uint32 transitTime, u
 
 void Unit::MonsterMoveByPath(float x, float y, float z, uint32 speed, bool smoothPath)
 {
-    PathInfo path(this, x, y, z, !smoothPath);
+    PathInfo path(this, x, y, z, !smoothPath, true);
     PointPath pointPath = path.getFullPath();
-    uint32 size = pointPath.size();
-    // tiny hack for underwater charge cases
-    pointPath[size-1].x = x;
-    pointPath[size-1].y = y;
-    pointPath[size-1].z = z;
 
     uint32 traveltime = uint32(pointPath.GetTotalLength()/float(speed));
     MonsterMoveByPath(pointPath, 1, pointPath.size(), traveltime);
