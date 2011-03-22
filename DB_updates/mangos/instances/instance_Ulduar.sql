@@ -1,5 +1,5 @@
 -- Instance Ulduar
--- Instance last changes: a617
+-- Instance last changes: a619
 
 -- teleporter
 UPDATE gameobject_template SET ScriptName = "go_ulduar_teleporter" WHERE entry = 194569;
@@ -426,11 +426,11 @@ INSERT INTO reference_loot_template VALUES
 (26929, 45268, 0, 1, 1, 1, 0, 0, 0);
 
 -- Auriaya
-UPDATE creature_template SET mechanic_immune_mask=583745371, equipment_id = 103000, scriptname='boss_auriaya' WHERE entry=33515;
+UPDATE creature_template SET equipment_id = 103000, scriptname='boss_auriaya' WHERE entry=33515;
 UPDATE creature_template SET mechanic_immune_mask=619395071, scriptname='mob_feral_defender' WHERE entry IN (34035, 34171);
 UPDATE creature_template SET minlevel=80, maxlevel=80, faction_h=14, faction_a=14, scriptname='mob_seeping_feral_essence' WHERE entry=34098;
 UPDATE creature_template SET ScriptName = 'mob_sanctum_sentry' WHERE entry = 34014;
-UPDATE `creature_template` SET `mechanic_immune_mask` = 619397115 WHERE `entry` IN (33515, 34175);
+UPDATE `creature_template` SET `mechanic_immune_mask` = 583745371 WHERE `entry` IN (33515, 34175);
 DELETE FROM creature_equip_template WHERE entry = 103000;
 INSERT INTO creature_equip_template values (103000, 45315, 0, 0);
 DELETE FROM spell_script_target WHERE entry = 64449;
