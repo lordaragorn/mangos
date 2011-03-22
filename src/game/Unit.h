@@ -1131,6 +1131,7 @@ typedef std::set<uint64> GuardianPetList;
 
 // Regeneration defines
 #define REGEN_TIME_FULL     2000                            // For this time difference is computed regen value
+#define REGEN_TIME_VEH_FULL 1000                            // For this time difference is computed regen value for vehicles
 #define REGEN_TIME_PRECISE  500                             // Used in Spell::CheckPower for precise regeneration in spell cast time
 
 struct SpellProcEventEntry;                                 // used only privately

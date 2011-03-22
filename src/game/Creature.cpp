@@ -604,7 +604,7 @@ void Creature::Update(uint32 update_diff, uint32 diff)
 
             Regenerate(getPowerType());
 
-            m_regenTimer = REGEN_TIME_FULL;
+            m_regenTimer = GetVehicleKit() ? REGEN_TIME_VEH_FULL : REGEN_TIME_FULL;
             break;
         }
         case CORPSE_FALLING:
