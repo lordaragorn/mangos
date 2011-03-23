@@ -60,8 +60,6 @@ void instance_ulduar::Initialize()
     m_uiVezaxGUID           = 0;
     m_uiYoggSaronGUID       = 0;
     m_uiAlgalonGUID         = 0;
-    m_uiRightArmGUID        = 0;
-    m_uiLeftArmGUID         = 0;
     m_uiFeralDefenderGUID   = 0;
     m_uiElderBrightleafGUID = 0;
     m_uiElderStonebarkGUID  = 0;
@@ -187,11 +185,8 @@ void instance_ulduar::OnCreatureCreate(Creature* pCreature)
     case NPC_KOLOGARN:
         m_uiKologarnGUID = pCreature->GetGUID();
         break;
-    case NPC_RIGHT_ARM:
-        m_uiRightArmGUID = pCreature->GetGUID();
-        break;
-    case NPC_LEFT_ARM:
-        m_uiLeftArmGUID = pCreature->GetGUID();
+    case NPC_KOLOGARN_BRIDGE_DUMMY:
+        m_uiKologarnBridgeDummyGUID = pCreature->GetGUID();
         break;
     case NPC_AURIAYA:
         m_uiAuriayaGUID = pCreature->GetGUID();
@@ -337,11 +332,6 @@ void instance_ulduar::OnObjectCreate(GameObject *pGo)
     case GO_KOLOGARN_BRIDGE:
         m_uiKologarnBridgeGUID = pGo->GetGUID();
         pGo->SetGoState(GO_STATE_ACTIVE);
-        if(m_auiEncounter[5] == DONE)
-        {
-            pGo->SetUInt32Value(GAMEOBJECT_LEVEL, 0);
-            pGo->SetGoState(GO_STATE_READY);
-        }
         break;
     case GO_SHATTERED_DOOR:
         m_uiShatteredHallsDoorGUID = pGo->GetGUID();
@@ -874,10 +864,8 @@ uint64 instance_ulduar::GetData64(uint32 uiData)
         return m_auiAssemblyGUIDs[2];
     case NPC_KOLOGARN:
         return m_uiKologarnGUID;
-    case NPC_LEFT_ARM:
-        return m_uiLeftArmGUID;
-    case NPC_RIGHT_ARM:
-        return m_uiRightArmGUID;
+    case NPC_KOLOGARN_BRIDGE_DUMMY:
+        return m_uiKologarnBridgeDummyGUID;
     case NPC_AURIAYA:
         return m_uiAuriayaGUID;
         // Keepers
@@ -923,6 +911,9 @@ uint64 instance_ulduar::GetData64(uint32 uiData)
         // celestial door
     case GO_CELESTIAL_DOOR:
         return m_uiCelestialDoorGUID;
+        // kologarn bridge
+    case GO_KOLOGARN_BRIDGE:
+        return m_uiKologarnBridgeGUID;
     }
 
     return 0;
