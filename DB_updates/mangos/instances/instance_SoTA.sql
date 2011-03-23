@@ -2,8 +2,8 @@
 -- Rigger Sparklight
 UPDATE creature_template SET npcflag = 1 WHERE entry IN (29260, 29262);
 -- Demolishers and Cannons
-UPDATE creature_template SET IconName = "vehichleCursor", Spell1 = 52338, Spell2 = 60206 WHERE entry = 28781;
-UPDATE creature_template SET IconName = "Gunner", unit_flags = unit_flags | 4, Spell1 = 49872 WHERE entry = 27894;
+UPDATE creature_template SET IconName = "vehichleCursor", Spell1 = 52338, Spell2 = 60206, RegenHealth = 0 WHERE entry = 28781;
+UPDATE creature_template SET IconName = "Gunner", unit_flags = unit_flags | 4, Spell1 = 49872, RegenHealth = 0 WHERE entry = 27894;
 
 DELETE FROM npc_spellclick_spells WHERE npc_entry IN (28781, 27894);
 INSERT INTO npc_spellclick_spells VALUES
