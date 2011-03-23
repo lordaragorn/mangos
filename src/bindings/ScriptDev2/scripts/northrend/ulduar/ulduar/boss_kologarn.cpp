@@ -564,6 +564,29 @@ CreatureAI* GetAI_mob_eyebeam_trigger(Creature* pCreature)
     return new mob_eyebeam_triggerAI(pCreature);
 }
 
+// kologarn kill pit bunny - kills players that fall down into the pit
+struct MANGOS_DLL_DECL mob_kologarn_pit_kill_bunnyAI : public ScriptedAI
+{
+    mob_kologarn_pit_kill_bunnyAI(Creature* pCreature) : ScriptedAI(pCreature)
+    {
+        m_fPositionZ = m_creature->GetPositionZ();
+    }
+    float m_fPositionZ;
+    void Reset(){}
+    void UpdateAI(const uint32 uiDiff){}
+
+    void MoveInLineOfSight(Unit *pWho)
+    {
+        if (pWho->GetTypeId() == TYPEID_PLAYER)
+            if (pWho->GetPositionZ() - m_fPositionZ <= 30.0f)
+                pWho->DealDamage(pWho, pWho->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NONE, NULL, false);
+    }
+};
+CreatureAI* GetAI_mob_kologarn_pit_kill_bunny(Creature* pCreature)
+{
+    return new mob_kologarn_pit_kill_bunnyAI(pCreature);
+}
+
 void AddSC_boss_kologarn()
 {
     Script* NewScript;
@@ -591,5 +614,10 @@ void AddSC_boss_kologarn()
     NewScript = new Script;
     NewScript->Name = "mob_eyebeam_trigger";
     NewScript->GetAI = &GetAI_mob_eyebeam_trigger;
+    NewScript->RegisterSelf();
+
+    NewScript = new Script;
+    NewScript->Name = "mob_kologarn_pit_kill_bunny";
+    NewScript->GetAI = &GetAI_mob_kologarn_pit_kill_bunny;
     NewScript->RegisterSelf();
 }
