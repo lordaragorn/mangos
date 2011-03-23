@@ -564,16 +564,40 @@ CreatureAI* GetAI_mob_eyebeam_trigger(Creature* pCreature)
     return new mob_eyebeam_triggerAI(pCreature);
 }
 
-// kologarn kill pit bunny - kills players that fall down into the pit
+// kologarn kill pit bunny - kills players that fall down into the pit. also handling bridge respawn after server restarts
 struct MANGOS_DLL_DECL mob_kologarn_pit_kill_bunnyAI : public ScriptedAI
 {
     mob_kologarn_pit_kill_bunnyAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
+        m_pInstance = pCreature->GetInstanceData();
         m_fPositionZ = m_creature->GetPositionZ();
+        m_bBridgeLocked = false;
     }
+    InstanceData *m_pInstance;
     float m_fPositionZ;
+    bool m_bBridgeLocked;
     void Reset(){}
-    void UpdateAI(const uint32 uiDiff){}
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if (!m_bBridgeLocked)
+        {
+            if (m_pInstance)
+            {
+                Creature *pKolo = m_pInstance->instance->GetCreature(m_pInstance->GetData64(NPC_KOLOGARN));
+                if (!pKolo || pKolo && !pKolo->isAlive())
+                {
+                    if (GameObject *pGo = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(GO_KOLOGARN_BRIDGE)))
+                    {
+                        pGo->SetUInt32Value(GAMEOBJECT_LEVEL, 0);
+                        pGo->SetGoState(GO_STATE_READY);
+                    }
+                    if (Creature *pBridge = m_pInstance->instance->GetCreature(m_pInstance->GetData64(NPC_KOLOGARN_BRIDGE_DUMMY)))
+                        pBridge->SetVisibility(VISIBILITY_ON);
+                    m_bBridgeLocked = true;
+                }
+            }
+        }
+    }
 
     void MoveInLineOfSight(Unit *pWho)
     {

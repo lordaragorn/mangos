@@ -80,6 +80,7 @@ enum
     NPC_KOLOGARN                = 32930,
     NPC_RIGHT_ARM               = 32934,
     NPC_LEFT_ARM                = 32933,
+    NPC_KOLOGARN_BRIDGE_DUMMY   = 34297,
     NPC_AURIAYA                 = 33515,
     NPC_SANCTUM_SENTRY          = 34014,
     NPC_FERAL_DEFENDER          = 34035,
@@ -274,6 +275,7 @@ class MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
     uint64 m_uiXT002GUID;
     uint64 m_auiAssemblyGUIDs[3];
     uint64 m_uiKologarnGUID;
+    uint64 m_uiKologarnBridgeDummyGUID;
     uint64 m_uiAuriayaGUID;
     uint64 m_uiMimironGUID;
     uint64 m_uiHodirGUID;
