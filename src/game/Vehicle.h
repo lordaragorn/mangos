@@ -53,6 +53,7 @@ public:
     ~VehicleKit();
 
     void Reset();
+    void InstallAccessory(uint32 entry, int8 seatId, bool minion = true);
     void InstallAllAccessories(uint32 entry);
 
     bool HasControllableSeat() const;
@@ -70,7 +71,6 @@ public:
     Unit* GetBase() { return m_pBase; }
 private:
     void UpdateFreeSeatCount();
-    void InstallAccessory(uint32 entry, int8 seatId, bool minion = true);
 
     SeatMap m_Seats;
     uint32 m_uiNumFreeSeats;
