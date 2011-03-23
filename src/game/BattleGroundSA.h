@@ -30,8 +30,8 @@ const uint32 BG_SA_WorldStatusA[3] = {3630, 3629, 3628};
 const uint32 BG_SA_WorldStatusH[3] = {3631, 3627, 3626};
 const uint32 BG_IC_TEAM[BG_TEAMS_COUNT] = {84,83};
 // boats starting positions [x, y, z, o]
-const float BG_SA_BoatOneStartPos[4] = {2690.0f, -832.0f, 30.0f, 2.895f};
-const float BG_SA_BoatTwoStartPos[4] = {2582.0f, 990.0f, 30.0f, 0.807f};
+const float BG_SA_BoatOneStartPos[4] = {2690.0f, -832.0f, 40.0f, 2.895f};
+const float BG_SA_BoatTwoStartPos[4] = {2582.0f, 990.0f, 40.0f, 0.807f};
 
 enum BG_SA_WorldStates
 {
@@ -323,7 +323,7 @@ class BattleGroundSA : public BattleGround
         void _GydOccupied(uint8 node,Team team);
         void _CreateBanner(uint8 node, uint8 type, uint8 teamIndex, bool delay);
         void ToggleTimer();
-        void ResetWorldStates();
+        void UpdateWorldStates();
 
         BG_SA_BannerTimer m_BannerTimers[BG_SA_GRY_MAX];
 

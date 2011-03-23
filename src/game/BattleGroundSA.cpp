@@ -105,7 +105,15 @@ void BattleGroundSA::PrepareRound()
         m_uiRoundElapsedTimer = (RoundScores[0].winner == m_tDefender) ? (BG_SA_ROUNDLENGTH - RoundScores[0].time) : 0;
     }
 
-    ResetWorldStates();
+    // gates status
+    GateStatus[BG_SA_GO_GATES_T_ROOM_ANCIENT_SHRINE] = BG_SA_GO_GATES_NORMAL;
+    GateStatus[BG_SA_GO_GATES_T_GREEN_EMERALD] = BG_SA_GO_GATES_NORMAL;
+    GateStatus[BG_SA_GO_GATES_T_BLUE_SAPHIRE] = BG_SA_GO_GATES_NORMAL;
+    GateStatus[BG_SA_GO_GATES_T_MAUVE_AMETHYST] = BG_SA_GO_GATES_NORMAL;
+    GateStatus[BG_SA_GO_GATES_T_RED_SUN] = BG_SA_GO_GATES_NORMAL;
+    GateStatus[BG_SA_GO_GATES_T_YELLOW_MOON] = BG_SA_GO_GATES_NORMAL;
+
+    UpdateWorldStates();
 }
 
 void BattleGroundSA::ResetBattle(uint32 winner, Team teamDefending)
@@ -120,13 +128,6 @@ void BattleGroundSA::ResetBattle(uint32 winner, Team teamDefending)
     m_StartDelayTimes[BG_STARTING_EVENT_THIRD]  = BG_START_DELAY_30S;
     m_StartDelayTimes[BG_STARTING_EVENT_FOURTH] = BG_START_DELAY_NONE;
 
-    m_ActiveEvents[SA_EVENT_ADD_GO] = BG_EVENT_NONE;
-    m_ActiveEvents[SA_EVENT_ADD_NPC] = BG_EVENT_NONE;
-    m_ActiveEvents[SA_EVENT_ADD_SPIR] = BG_EVENT_NONE;
-    m_ActiveEvents[SA_EVENT_ADD_BOMB] = BG_EVENT_NONE;
-    m_ActiveEvents[SA_EVENT_ADD_VECH_E] = BG_EVENT_NONE;
-    m_ActiveEvents[SA_EVENT_ADD_VECH_W] = BG_EVENT_NONE;
-
     SetupShips();
     SetStartTime(0);
     ToggleTimer();
@@ -137,20 +138,13 @@ void BattleGroundSA::ResetBattle(uint32 winner, Team teamDefending)
         if (Player *plr = sObjectMgr.GetPlayer(itr->first))
             TeleportPlayerToCorrectLoc(plr, true);
     }
-    ResetWorldStates();
+    UpdateWorldStates();
 }
 
 void BattleGroundSA::Reset()
 {
     //call parent's class reset
     BattleGround::Reset();
-
-    m_ActiveEvents[SA_EVENT_ADD_GO] = BG_EVENT_NONE;
-    m_ActiveEvents[SA_EVENT_ADD_NPC] = BG_EVENT_NONE;
-    m_ActiveEvents[SA_EVENT_ADD_SPIR] = BG_EVENT_NONE;
-    m_ActiveEvents[SA_EVENT_ADD_BOMB] = BG_EVENT_NONE;
-    m_ActiveEvents[SA_EVENT_ADD_VECH_E] = BG_EVENT_NONE;
-    m_ActiveEvents[SA_EVENT_ADD_VECH_W] = BG_EVENT_NONE;
 
     PrepareRound();
 }
@@ -372,9 +366,10 @@ void BattleGroundSA::Update(uint32 diff)
     }
 }
 
-void BattleGroundSA::ResetWorldStates()
+void BattleGroundSA::UpdateWorldStates()
 {
-    //Player may enter BEFORE we set up bG - lets update his worldstates anyway...
+    UpdateWorldState(BG_SA_ENABLE_TIMER, m_bTimerEnabled);
+
     UpdateWorldState(BG_SA_RIGHT_GY_HORDE , m_tDefender == HORDE);
     UpdateWorldState(BG_SA_LEFT_GY_HORDE , m_tDefender == HORDE);
     UpdateWorldState(BG_SA_CENTER_GY_HORDE , m_tDefender == HORDE);
@@ -383,32 +378,16 @@ void BattleGroundSA::ResetWorldStates()
     UpdateWorldState(BG_SA_LEFT_GY_ALLIANCE , m_tDefender == ALLIANCE);
     UpdateWorldState(BG_SA_CENTER_GY_ALLIANCE , m_tDefender == ALLIANCE);
 
-    if (m_tDefender == HORDE)
-    {
-        UpdateWorldState(BG_SA_ALLY_ATTACKS, 1);
-        UpdateWorldState(BG_SA_HORDE_ATTACKS, 0);
+    UpdateWorldState(BG_SA_ALLY_ATTACKS, m_tDefender == HORDE);
+    UpdateWorldState(BG_SA_HORDE_ATTACKS, m_tDefender != HORDE);
 
-        UpdateWorldState(BG_SA_RIGHT_ATT_TOKEN_ALL, 1);
-        UpdateWorldState(BG_SA_LEFT_ATT_TOKEN_ALL, 1);
-        UpdateWorldState(BG_SA_RIGHT_ATT_TOKEN_HRD, 0);
-        UpdateWorldState(BG_SA_LEFT_ATT_TOKEN_HRD, 0);
+    UpdateWorldState(BG_SA_RIGHT_ATT_TOKEN_ALL, m_tDefender == HORDE);
+    UpdateWorldState(BG_SA_LEFT_ATT_TOKEN_ALL, m_tDefender == HORDE);
+    UpdateWorldState(BG_SA_RIGHT_ATT_TOKEN_HRD, m_tDefender != HORDE);
+    UpdateWorldState(BG_SA_LEFT_ATT_TOKEN_HRD, m_tDefender != HORDE);
 
-        UpdateWorldState(BG_SA_HORDE_DEFENCE_TOKEN, 1);
-        UpdateWorldState(BG_SA_ALLIANCE_DEFENCE_TOKEN, 0);
-    }
-    else
-    {
-        UpdateWorldState(BG_SA_HORDE_ATTACKS, 1);
-        UpdateWorldState(BG_SA_ALLY_ATTACKS, 0);
-
-        UpdateWorldState(BG_SA_RIGHT_ATT_TOKEN_ALL, 0);
-        UpdateWorldState(BG_SA_LEFT_ATT_TOKEN_ALL, 0);
-        UpdateWorldState(BG_SA_RIGHT_ATT_TOKEN_HRD, 1);
-        UpdateWorldState(BG_SA_LEFT_ATT_TOKEN_HRD, 1);
-
-        UpdateWorldState(BG_SA_HORDE_DEFENCE_TOKEN, 0);
-        UpdateWorldState(BG_SA_ALLIANCE_DEFENCE_TOKEN, 1);
-    }
+    UpdateWorldState(BG_SA_HORDE_DEFENCE_TOKEN, m_tDefender == HORDE);
+    UpdateWorldState(BG_SA_ALLIANCE_DEFENCE_TOKEN, m_tDefender != HORDE);
 
     UpdateWorldState(BG_SA_PURPLE_GATEWS, 1);
     UpdateWorldState(BG_SA_RED_GATEWS, 1);
@@ -416,6 +395,13 @@ void BattleGroundSA::ResetWorldStates()
     UpdateWorldState(BG_SA_GREEN_GATEWS, 1);
     UpdateWorldState(BG_SA_YELLOW_GATEWS, 1);
     UpdateWorldState(BG_SA_ANCIENT_GATEWS, 1);
+
+    UpdateWorldState(BG_SA_GateStatus[BG_SA_GO_GATES_T_ROOM_ANCIENT_SHRINE], GateStatus[BG_SA_GO_GATES_T_ROOM_ANCIENT_SHRINE]);
+    UpdateWorldState(BG_SA_GateStatus[BG_SA_GO_GATES_T_GREEN_EMERALD], GateStatus[BG_SA_GO_GATES_T_GREEN_EMERALD]);
+    UpdateWorldState(BG_SA_GateStatus[BG_SA_GO_GATES_T_BLUE_SAPHIRE], GateStatus[BG_SA_GO_GATES_T_BLUE_SAPHIRE]);
+    UpdateWorldState(BG_SA_GateStatus[BG_SA_GO_GATES_T_MAUVE_AMETHYST], GateStatus[BG_SA_GO_GATES_T_MAUVE_AMETHYST]);
+    UpdateWorldState(BG_SA_GateStatus[BG_SA_GO_GATES_T_RED_SUN], GateStatus[BG_SA_GO_GATES_T_RED_SUN]);
+    UpdateWorldState(BG_SA_GateStatus[BG_SA_GO_GATES_T_YELLOW_MOON], GateStatus[BG_SA_GO_GATES_T_YELLOW_MOON]);
 }
 
 void BattleGroundSA::UpdateTimer()
@@ -434,16 +420,12 @@ void BattleGroundSA::StartingEventOpenDoors()
 {
     uint8 defender_occupier = (m_tDefender == ALLIANCE) ? BG_SA_GRAVE_STATUS_ALLY_OCCUPIED : BG_SA_GRAVE_STATUS_HORDE_OCCUPIED;
 
-    SpawnEvent(SA_EVENT_ADD_NPC, 0, true);  // spawn NPCs (vehicles also)
-    SpawnEvent(SA_EVENT_ADD_BOMB, 1, true); // spawn seaforium charges
+    SpawnEvent(SA_EVENT_ADD_NPC, 0, true);  // spawn NPCs (vehicles)
+    SpawnEvent(SA_EVENT_ADD_BOMB, m_tDefender == ALLIANCE ? 1 : 0, true); // spawn seaforium charges
 
     // set up graveyards
     for (uint8 i = 0; i < BG_SA_GRY_MAX; ++i)
     {
-        // Despawn all graveyards first
-        for (uint8 z = 1; z < 5; ++z)
-            SpawnEvent(i, z, false);
-
         // spawn proper graveyard banner
         SpawnEvent(i, defender_occupier, true);
 
@@ -456,7 +438,7 @@ void BattleGroundSA::StartingEventOpenDoors()
     }
 
     ToggleTimer();
-    ResetWorldStates();
+    UpdateWorldStates();
 }
 
 void BattleGroundSA::RemovePlayer(Player* /*plr*/, ObjectGuid /*guid*/) {}
@@ -468,8 +450,9 @@ void BattleGroundSA::AddPlayer(Player *plr)
     TeleportPlayerToCorrectLoc(plr);
 
     BattleGroundSAScore* sc = new BattleGroundSAScore;
-
     m_PlayerScores[plr->GetObjectGuid()] = sc;
+
+    UpdateWorldStates();
 }
 
 void BattleGroundSA::HandleAreaTrigger(Player * /*Source*/, uint32 /*Trigger*/)
@@ -532,6 +515,15 @@ void BattleGroundSA::EventPlayerClickedOnFlag(Player *source, GameObject* target
 
     // Check if player really could use this banner, not cheated
     if (!(m_Gyd[gyd] == 0 || teamIndex == m_Gyd[gyd] % 2))
+        return;
+
+    // check gates status for E, W and S graveyards
+    if ((gyd == BG_SA_GRAVE_E || gyd == BG_SA_GRAVE_W) &&
+        GateStatus[BG_SA_GO_GATES_T_GREEN_EMERALD] != BG_SA_GO_GATES_DESTROY &&
+        GateStatus[BG_SA_GO_GATES_T_BLUE_SAPHIRE] != BG_SA_GO_GATES_DESTROY
+        ||
+        gyd == BG_SA_GRAVE_S && GateStatus[BG_SA_GO_GATES_T_MAUVE_AMETHYST] != BG_SA_GO_GATES_DESTROY &&
+        GateStatus[BG_SA_GO_GATES_T_RED_SUN] != BG_SA_GO_GATES_DESTROY)
         return;
 
     uint32 sound = 0;
@@ -598,18 +590,13 @@ void BattleGroundSA::EventPlayerClickedOnFlag(Player *source, GameObject* target
             //_SendNodeUpdate(node);
             m_GydTimers[gyd] = BG_SA_FLAG_CAPTURING_TIME;
 
-            if (teamIndex == BG_TEAM_ALLIANCE)
-            {
-                // SendMessage2ToAll(LANG_BG_SA_AH_PRECIPITATES_GRAVEYARD,CHAT_MSG_BG_SYSTEM_ALLIANCE, source, LANG_BG_ALLY, _GydName(gyd));
-                SendWarningToAllSA(gyd, STATUS_CLAIMED, ALLIANCE);
-            }
-            else
-            {
-                // SendMessage2ToAll(LANG_BG_SA_AH_PRECIPITATES_GRAVEYARD,CHAT_MSG_BG_SYSTEM_HORDE, source, LANG_BG_HORDE, _GydName(gyd));
-                SendWarningToAllSA(gyd, STATUS_CLAIMED, HORDE);
-            }
-            sound = (teamIndex == BG_TEAM_ALLIANCE) ? BG_SA_SOUND_GYD_ASSAULTED_ALLIANCE : BG_SA_SOUND_GYD_ASSAULTED_HORDE;
+            // SendMessage2ToAll(LANG_BG_SA_AH_PRECIPITATES_GRAVEYARD,CHAT_MSG_BG_SYSTEM_ALLIANCE, source, LANG_BG_ALLY, _GydName(gyd));
+            SendWarningToAllSA(gyd, STATUS_CLAIMED, ALLIANCE);
+
+            sound = BG_SA_SOUND_GYD_ASSAULTED_ALLIANCE;
         }
+        else
+            return;
     }
     else if (m_tDefender == ALLIANCE)
     {
@@ -623,20 +610,15 @@ void BattleGroundSA::EventPlayerClickedOnFlag(Player *source, GameObject* target
             //_SendNodeUpdate(node);
             m_GydTimers[gyd] = BG_SA_FLAG_CAPTURING_TIME;
 
-            if (teamIndex == BG_TEAM_ALLIANCE)
-            {
-                // SendMessage2ToAll(LANG_BG_SA_AH_PRECIPITATES_GRAVEYARD,CHAT_MSG_BG_SYSTEM_ALLIANCE, source, LANG_BG_ALLY, _GydName(gyd));
-                SendWarningToAllSA(gyd, STATUS_CLAIMED, ALLIANCE);
-            }
-            else
-            {
-                // SendMessage2ToAll(LANG_BG_SA_AH_PRECIPITATES_GRAVEYARD,CHAT_MSG_BG_SYSTEM_HORDE, source, LANG_BG_HORDE, _GydName(gyd));
-                SendWarningToAllSA(gyd, STATUS_CLAIMED, HORDE);
-            }
-            sound = (teamIndex == BG_TEAM_ALLIANCE) ? BG_SA_SOUND_GYD_ASSAULTED_ALLIANCE : BG_SA_SOUND_GYD_ASSAULTED_HORDE;
+            // SendMessage2ToAll(LANG_BG_SA_AH_PRECIPITATES_GRAVEYARD,CHAT_MSG_BG_SYSTEM_HORDE, source, LANG_BG_HORDE, _GydName(gyd));
+            SendWarningToAllSA(gyd, STATUS_CLAIMED, HORDE);
+
+            sound = BG_SA_SOUND_GYD_ASSAULTED_HORDE;
         }
+        else
+            return;
     }
-   PlaySoundToAll(sound);
+    PlaySoundToAll(sound);
 }
 
 void BattleGroundSA::EventSpawnGOSA(Player *owner, GameObject* obj, float x, float y, float z)
@@ -687,7 +669,6 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
                     UpdatePlayerScore(player, SCORE_GATES_DESTROYED, 1);
                     RewardHonorToTeam(100, (teamIndex == 0) ? ALLIANCE:HORDE);
                     RewardReputationToTeam((teamIndex == 0) ? 1050:1085, 75, (teamIndex == 0) ? ALLIANCE:HORDE);
-                    m_bRelicGateDestroyed = true;
                     break;
             }
             break;
@@ -816,11 +797,10 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
         {
             if (eventId == 22097 && player->GetTeam() != m_tDefender)
             {
-                if(!m_bRelicGateDestroyed)
+                if(GateStatus[BG_SA_GO_GATES_T_ROOM_ANCIENT_SHRINE] != BG_SA_GO_GATES_DESTROY)
                 {
-                    //player->GetSession()->KickPlayer();
                     sLog.outError("Player %s has clicked SOTA Relic without Relic gate being destroyed", player->GetName());
-                    //return;
+                    return;
                 }
                 if(GetCurrentRound() == BG_SA_ROUND_ONE) // Victory at first round
                 {
