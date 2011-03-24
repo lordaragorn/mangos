@@ -602,7 +602,7 @@ struct MANGOS_DLL_DECL mob_kologarn_pit_kill_bunnyAI : public ScriptedAI
     void MoveInLineOfSight(Unit *pWho)
     {
         if (pWho->GetTypeId() == TYPEID_PLAYER)
-            if (pWho->GetPositionZ() - m_fPositionZ <= 30.0f)
+            if (m_creature->IsWithinLOSInMap(pWho) && pWho->GetPositionZ() - m_fPositionZ <= 30.0f)
                 pWho->DealDamage(pWho, pWho->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NONE, NULL, false);
     }
 };
