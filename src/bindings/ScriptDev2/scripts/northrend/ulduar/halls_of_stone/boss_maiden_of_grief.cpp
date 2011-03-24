@@ -134,13 +134,16 @@ struct MANGOS_DLL_DECL boss_maiden_of_griefAI : public ScriptedAI
         else
             m_uiShockTimer -= uiDiff;
 
-        if (m_uiPartingSorrowTimer < uiDiff)
+        if (!m_bIsRegularMode)
         {
-            if (DoCastSpellIfCan(m_creature->getVictim(), SPELL_PARTING_SORROW) == CAST_OK)
-                m_uiPartingSorrowTimer = 25000;
+            if (m_uiPartingSorrowTimer < uiDiff)
+            {
+                if (DoCastSpellIfCan(m_creature->getVictim(), SPELL_PARTING_SORROW) == CAST_OK)
+                    m_uiPartingSorrowTimer = 25000;
+            }
+            else
+                m_uiPartingSorrowTimer -= uiDiff;
         }
-        else
-            m_uiPartingSorrowTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
     }
