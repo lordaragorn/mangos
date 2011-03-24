@@ -193,8 +193,12 @@ bool VehicleKit::AddPassenger(Unit *passenger, int8 seatId)
 
     if (seatInfo->m_flags & SEAT_FLAG_UNATTACKABLE || seat->second.seatInfo->m_flags & SEAT_FLAG_CAN_CONTROL)
     {
-        passenger->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        passenger->RemoveSpellsCausingAura(SPELL_AURA_MOD_SHAPESHIFT);
+        // some exceptions? Ignis slag pot: players should be targetable! maybe flag is wrong...
+        if (m_pBase->GetEntry() != 33118)
+        {
+            passenger->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            passenger->RemoveSpellsCausingAura(SPELL_AURA_MOD_SHAPESHIFT);
+        }
     }
 
     if (seatInfo->m_flags & SEAT_FLAG_CAN_CONTROL)
