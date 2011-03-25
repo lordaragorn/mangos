@@ -15,20 +15,15 @@ DELETE from creature_template_addon where entry=26500;
 INSERT into creature_template_addon (entry,auras) VALUES
 (26500,'47119 0');
 
--- frozen mojo
-UPDATE creature_loot_template SET
-ChanceOrQuestChance=50,
-lootcondition=8,
-condition_value1=11991
-WHERE item=35799;
 
-
--- desperate mojo
-UPDATE creature_loot_template SET
-ChanceOrQuestChance=50,
-lootcondition=8,
-condition_value1=12802
-WHERE item=36743;
+DELETE from creature_loot_template where item IN(35799,36743,36758);
+INSERT into creature_loot_template VALUES
+(26425,35799,50,0,1,1,2,35797,1),
+(26447,35799,50,0,1,1,2,35797,1),
+(26704,36743,50,0,1,1,2,35797,1),
+(27554,36743,50,0,1,1,2,35797,1),
+(26795,36758,33,0,1,1,2,35797,1),
+(26797,36758,33,0,1,1,2,35797,1);
 
 
 DELETE from spell_script_target where entry=47110;
