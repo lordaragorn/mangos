@@ -1,5 +1,5 @@
 -- Instance Ulduar
--- Instance last changes: a617
+-- Instance last changes: a630
 
 -- teleporter
 UPDATE gameobject_template SET ScriptName = "go_ulduar_teleporter" WHERE entry = 194569;
@@ -369,36 +369,23 @@ INSERT INTO `reference_loot_template` VALUES
 (33693, 45244, 0, 3, 1, 1, 0, 0, 0);
 
 -- Kologarn
--- arms should be mounted on boss?
+-- arms are mounted on the boss
 DELETE FROM creature WHERE id IN (32933, 32934);
-INSERT INTO creature (id, map, spawnMask, phaseMask, modelid, equipment_id, position_x, position_y, position_z, orientation, spawntimesecs, spawndist, currentwaypoint, curhealth, curmana, DeathState, MovementType) VALUES
-(32933, 603, 3, 65535, 0, 0, 1797.15, -24.4027, 448.741, 3.14747, 604800, 0, 0, 543855, 0, 0, 0);
-INSERT INTO creature (id, map, spawnMask, phaseMask, modelid, equipment_id, position_x, position_y, position_z, orientation, spawntimesecs, spawndist, currentwaypoint, curhealth, curmana, DeathState, MovementType) VALUES
-(32934, 603, 3, 65535, 0, 0, 1797.15, -24.4027, 448.741, 3.14747, 604800, 0, 0, 543855, 0, 0, 0);
+-- set proper Kologarn position
 UPDATE creature SET position_x = 1797.15, position_y = -24.4027, position_z = 448.741 WHERE id = 32930;
+
 UPDATE creature_model_info SET bounding_radius = 40, combat_reach = 40 WHERE modelid IN (28638, 28822, 28821);
 UPDATE creature_template SET scriptname='boss_kologarn' WHERE entry = 32930;
 UPDATE creature_template SET scriptname='boss_right_arm' WHERE entry=32934;
 UPDATE creature_template SET scriptname='boss_left_arm' WHERE entry=32933;
 UPDATE creature_template SET ScriptName = 'mob_ulduar_rubble' WHERE entry IN (33768, 33809, 33908, 33942);
 UPDATE creature_template SET ScriptName = "mob_eyebeam_trigger" WHERE entry IN (33802, 33632);
+UPDATE creature_template SET scriptname = "mob_kologarn_pit_kill_bunny" WHERE entry = 33742;
+UPDATE creature SET DeathState = 1 WHERE id = 34297;
 UPDATE creature_template SET dmg_multiplier = 0 WHERE entry IN (32934, 32933, 33911, 33910);
 UPDATE creature_template SET mechanic_immune_mask = 617299803 WHERE entry IN (32930, 33909, 32934, 32933, 33911, 33910);
 UPDATE creature_template SET RegenHealth = 1 WHERE entry = 33910;
 UPDATE creature_template SET RegenHealth = 1 WHERE entry = 33911;
-
--- DELETE FROM creature_template_addon WHERE entry = 32934;
--- INSERT INTO creature_template_addon VALUES
--- (32934, 0, 0, 0, 0, 0, 0, 380, "", "");
-
--- DELETE FROM vehicle_data WHERE entry = 380;
--- INSERT INTO vehicle_data VALUES (380, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-
--- DELETE FROM vehicle_seat_data WHERE seat IN (3690, 3691, 3692);
--- INSERT INTO vehicle_seat_data VALUES
--- (3690, 0),
--- (3691, 0),
--- (3692, 0);
 
 -- missing loot 25man
 DELETE FROM gameobject_loot_template WHERE entry = 26929;
@@ -426,13 +413,15 @@ INSERT INTO reference_loot_template VALUES
 (26929, 45268, 0, 1, 1, 1, 0, 0, 0);
 
 -- Auriaya
-UPDATE creature_template SET mechanic_immune_mask=583745371, equipment_id = 103000, scriptname='boss_auriaya' WHERE entry=33515;
-UPDATE creature_template SET mechanic_immune_mask=619395071, scriptname='mob_feral_defender' WHERE entry IN (34035, 34171);
+UPDATE creature_template SET equipment_id = 103000, scriptname='boss_auriaya' WHERE entry=33515;
+UPDATE creature_template SET scriptname='mob_feral_defender' WHERE entry IN (34035, 34171);
 UPDATE creature_template SET minlevel=80, maxlevel=80, faction_h=14, faction_a=14, scriptname='mob_seeping_feral_essence' WHERE entry=34098;
 UPDATE creature_template SET ScriptName = 'mob_sanctum_sentry' WHERE entry = 34014;
-UPDATE `creature_template` SET `mechanic_immune_mask` = 619397115 WHERE `entry` IN (33515, 34175);
+UPDATE `creature_template` SET `mechanic_immune_mask` = 619395071 WHERE `entry` IN (33515, 34175, 34035, 34171);
+
 DELETE FROM creature_equip_template WHERE entry = 103000;
 INSERT INTO creature_equip_template values (103000, 45315, 0, 0);
+
 DELETE FROM spell_script_target WHERE entry = 64449;
 INSERT INTO spell_script_target VALUES
 (64449, 1, 34096);
