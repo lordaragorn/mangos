@@ -344,19 +344,12 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
         return;
     }
 
-    Player *pPlayer = NULL;
-
     if (mover->GetTypeId()==TYPEID_PLAYER)
-        pPlayer = (Player*)mover;
-    else if (mover->GetVehicleKit() && mover->GetCharmer() && mover->GetCharmer()->GetTypeId() == TYPEID_PLAYER)
-        pPlayer = (Player*)mover->GetCharmer();
-
-    if (pPlayer)
     {
         // not have spell in spellbook or spell passive and not casted by client
-        if (!pPlayer->HasActiveSpell (spellId) || IsPassiveSpell(spellInfo))
+        if (!((Player*)mover)->HasActiveSpell (spellId) || IsPassiveSpell(spellInfo))
         {
-            sLog.outError("World: Player %u casts spell %u which he shouldn't have", pPlayer->GetGUIDLow(), spellId);
+            sLog.outError("World: Player %u casts spell %u which he shouldn't have", mover->GetGUIDLow(), spellId);
             //cheater? kick? ban?
             recvPacket.rpos(recvPacket.wpos());                 // prevent spam at ignore packet
             return;
