@@ -1,5 +1,5 @@
 -- Instance Ulduar
--- Instance last changes: a622
+-- Instance last changes: a630
 
 -- teleporter
 UPDATE gameobject_template SET ScriptName = "go_ulduar_teleporter" WHERE entry = 194569;
@@ -381,7 +381,7 @@ UPDATE creature_template SET scriptname='boss_left_arm' WHERE entry=32933;
 UPDATE creature_template SET ScriptName = 'mob_ulduar_rubble' WHERE entry IN (33768, 33809, 33908, 33942);
 UPDATE creature_template SET ScriptName = "mob_eyebeam_trigger" WHERE entry IN (33802, 33632);
 UPDATE creature_template SET scriptname = "mob_kologarn_pit_kill_bunny" WHERE entry = 33742;
-UPDATE creature SET DeathState = 1 WHERE entry = 34297;
+UPDATE creature SET DeathState = 1 WHERE id = 34297;
 UPDATE creature_template SET dmg_multiplier = 0 WHERE entry IN (32934, 32933, 33911, 33910);
 UPDATE creature_template SET mechanic_immune_mask = 617299803 WHERE entry IN (32930, 33909, 32934, 32933, 33911, 33910);
 UPDATE creature_template SET RegenHealth = 1 WHERE entry = 33910;
@@ -414,10 +414,10 @@ INSERT INTO reference_loot_template VALUES
 
 -- Auriaya
 UPDATE creature_template SET equipment_id = 103000, scriptname='boss_auriaya' WHERE entry=33515;
-UPDATE creature_template SET mechanic_immune_mask=619395071, scriptname='mob_feral_defender' WHERE entry IN (34035, 34171);
+UPDATE creature_template SET scriptname='mob_feral_defender' WHERE entry IN (34035, 34171);
 UPDATE creature_template SET minlevel=80, maxlevel=80, faction_h=14, faction_a=14, scriptname='mob_seeping_feral_essence' WHERE entry=34098;
 UPDATE creature_template SET ScriptName = 'mob_sanctum_sentry' WHERE entry = 34014;
-UPDATE `creature_template` SET `mechanic_immune_mask` = 583745371 WHERE `entry` IN (33515, 34175);
+UPDATE `creature_template` SET `mechanic_immune_mask` = 619395071 WHERE `entry` IN (33515, 34175, 34035, 34171);
 
 DELETE FROM creature_equip_template WHERE entry = 103000;
 INSERT INTO creature_equip_template values (103000, 45315, 0, 0);

@@ -81,18 +81,27 @@ struct MANGOS_DLL_DECL boss_sjonnirAI : public ScriptedAI
     ScriptedInstance* m_pInstance;
     bool m_bIsRegularMode;
 
+    uint32 m_uiChainLightingTimer;
+    uint32 m_uiLightingRingTimer;
+    uint32 m_uiStaticChargeTimer;
+    uint32 m_uiFrenzyTimer;
+    uint32 m_uiLightingShieldTimer;
+
     void Reset()
     {
-        if (m_creature->isAlive())
-            m_creature->CastSpell(m_creature, m_bIsRegularMode ? SPELL_LIGHTNING_SHIELD : SPELL_LIGHTNING_SHIELD_H, false);
+        m_uiChainLightingTimer   =8000;
+        m_uiLightingRingTimer    =14000;
+        m_uiStaticChargeTimer    =12000;
+        m_uiFrenzyTimer          =300000;
+        m_uiLightingShieldTimer  =20000;
     }
 
     void Aggro(Unit* pWho)
     {
         DoScriptText(SAY_AGGRO, m_creature);
 
-        m_creature->CastSpell(m_creature, m_bIsRegularMode ? SPELL_SUMMON_IRON_DWARF : SPELL_SUMMON_IRON_DWARF_H, true);
-        m_creature->CastSpell(m_creature, m_bIsRegularMode ? SPELL_SUMMON_IRON_TROGG : SPELL_SUMMON_IRON_TROGG_H, true);
+        DoCastSpellIfCan(m_creature, m_bIsRegularMode ? SPELL_SUMMON_IRON_DWARF : SPELL_SUMMON_IRON_DWARF_H, CAST_TRIGGERED);
+        DoCastSpellIfCan(m_creature, m_bIsRegularMode ? SPELL_SUMMON_IRON_TROGG : SPELL_SUMMON_IRON_TROGG_H, CAST_TRIGGERED);
     }
 
 
@@ -127,6 +136,42 @@ struct MANGOS_DLL_DECL boss_sjonnirAI : public ScriptedAI
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+        if (m_uiChainLightingTimer < uiDiff)
+        {
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+            {
+                DoCastSpellIfCan(target, m_bIsRegularMode ? SPELL_CHAIN_LIGHTNING : SPELL_CHAIN_LIGHTNING_H);
+                m_uiChainLightingTimer = 8000;
+            }
+        }else m_uiChainLightingTimer -= uiDiff;
+
+        if (m_uiLightingRingTimer < uiDiff)
+        {
+            DoCastSpellIfCan(m_creature, m_bIsRegularMode ? SPELL_LIGHTNING_RING : SPELL_LIGHTNING_RING_H);
+            m_uiLightingRingTimer = 20000;
+        }else m_uiLightingRingTimer -= uiDiff;
+
+        if (m_uiStaticChargeTimer < uiDiff)
+        {
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+            {
+                if (DoCastSpellIfCan(target, m_bIsRegularMode ? SPELL_STATIC_CHARGE : SPELL_STATIC_CHARGE_H) == CAST_OK)
+                    m_uiStaticChargeTimer = 12000;
+            }
+        }else m_uiStaticChargeTimer -= uiDiff;
+
+        if (m_uiLightingShieldTimer < uiDiff)
+        {
+            if (DoCastSpellIfCan(m_creature, m_bIsRegularMode ? SPELL_LIGHTNING_SHIELD : SPELL_LIGHTNING_SHIELD_H) == CAST_OK)
+                m_uiLightingShieldTimer = 20000;
+        }else m_uiLightingShieldTimer -= uiDiff;
+
+        if (m_uiFrenzyTimer < uiDiff)
+        {
+            if (DoCastSpellIfCan(m_creature, SPELL_FRENZY) == CAST_OK)
+                m_uiFrenzyTimer = 300000;
+        }else m_uiFrenzyTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
     }

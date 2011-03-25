@@ -323,6 +323,68 @@ CreatureAI* GetAI_mob_crusader_trigger(Creature* pCreature)
     return new mob_crusader_triggerAI(pCreature);
 }
 
+/*######
+## npc_ghoul_feeding_bunny
+######*/
+enum 
+{
+    NPC_DECAYING_GHOUL              = 28565,
+    NPC_GHOUL_FEEDING_KC            = 28591,
+    QUEST_FEEDIN_DA_GOOLZ           = 12652
+ 
+};
+
+struct MANGOS_DLL_DECL npc_ghoul_feeding_bunnyAI : public ScriptedAI
+{
+    npc_ghoul_feeding_bunnyAI(Creature* pCreature) : ScriptedAI(pCreature) { Reset(); }
+
+    uint32 uiKaboomTimer;
+    uint32 uiCheckTimer;
+
+    void Reset() 
+    {
+        uiCheckTimer  = 1000;
+        uiKaboomTimer = 11000;
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+     {
+            if (uiCheckTimer <= uiDiff)
+            {
+                if(Creature *pGhoul = GetClosestCreatureWithEntry(m_creature, NPC_DECAYING_GHOUL, 20.0f))
+                    {
+                        if(pGhoul->isAlive())
+                        {
+                            pGhoul->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ());
+                            
+
+                        }    
+                    }
+
+            } else uiCheckTimer -= uiDiff;
+
+            if( uiKaboomTimer <= uiDiff)
+            {
+                if(Player *pPlayer = m_creature->GetMap()->GetPlayer(m_creature->GetCreatorGuid()))
+                {
+                    if(pPlayer->GetQuestStatus(QUEST_FEEDIN_DA_GOOLZ) == QUEST_STATUS_INCOMPLETE)
+                    {                        
+                         pPlayer->KilledMonsterCredit(NPC_GHOUL_FEEDING_KC);
+                    }
+                }
+                m_creature->ForcedDespawn();
+                if(Creature *pGhoul = GetClosestCreatureWithEntry(m_creature, NPC_DECAYING_GHOUL, 10.0f))
+                {
+                    pGhoul->ForcedDespawn();
+                }
+            }
+            else uiKaboomTimer -= uiDiff;
+     }    
+};
+CreatureAI* GetAI_npc_ghoul_feeding_bunny(Creature* pCreature)
+{
+    return new npc_ghoul_feeding_bunnyAI(pCreature);
+}
 
 void AddSC_zuldrak()
 {
