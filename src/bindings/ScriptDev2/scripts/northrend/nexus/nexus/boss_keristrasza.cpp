@@ -175,7 +175,7 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
                 uiTailSweepTimer = urand(2500, 7500);
         }
         else
-            uiCrystalChainTimer -= uiDiff;
+            uiTailSweepTimer  -= uiDiff;
 
         if (uiCrystalfireBreathTimer < uiDiff)
         {
