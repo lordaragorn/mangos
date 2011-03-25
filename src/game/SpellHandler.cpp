@@ -344,7 +344,11 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
         return;
     }
 
-    if (mover->GetTypeId()==TYPEID_PLAYER)
+    // player casts from vehicle controllable seat
+    if (mover->GetVehicleKit() && mover->GetCharmer() && mover->GetCharmer()->GetTypeId() == TYPEID_PLAYER)
+        mover = mover->GetCharmer();
+
+    if (mover->GetTypeId() == TYPEID_PLAYER)
     {
         // not have spell in spellbook or spell passive and not casted by client
         if (!((Player*)mover)->HasActiveSpell (spellId) || IsPassiveSpell(spellInfo))
