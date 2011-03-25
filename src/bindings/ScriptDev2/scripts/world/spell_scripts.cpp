@@ -436,23 +436,7 @@ bool EffectAuraDummy_spell_aura_dummy_npc(const Aura* pAura, bool bApply)
             }
 
             return false;
-        }
-        case SPELL_BLOW_SNOW:
-        {
-            Creature* pCreatureTarget = (Creature*)pAura->GetTarget();
-
-            if(pCreatureTarget && (pCreatureTarget->GetEntry() == NPC_WARMONGER) || (pCreatureTarget->GetEntry() == NPC_SOOTHSAYER))
-            {
-                if (Unit* pCaster = pAura->GetCaster())
-                {
-                    if(pCaster->HasInArc(M_PI_F/2, pCreatureTarget))
-                    {
-                        pCreatureTarget->CastSpell(pCreatureTarget, SPELL_FROZEN, true);
-                        return true;
-                    }
-                }
-            }
-        }
+        }        
     }
 
     return false;
@@ -825,6 +809,17 @@ bool EffectDummyCreature_spell_dummy_npc(Unit* pCaster, uint32 uiSpellId, SpellE
                 return true;
             }
             return true;
+        }
+        case SPELL_BLOW_SNOW:
+        {
+            if((pCreatureTarget->GetEntry() == NPC_WARMONGER) || (pCreatureTarget->GetEntry() == NPC_SOOTHSAYER))
+            {
+                if(pCaster->HasInArc(M_PI_F/2, pCreatureTarget))
+                {
+                    pCreatureTarget->CastSpell(pCreatureTarget, SPELL_FROZEN, true);
+                    return true;
+                }
+            }
         }
     }
 
