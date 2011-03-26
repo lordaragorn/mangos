@@ -183,7 +183,11 @@ bool VehicleKit::AddPassenger(Unit *passenger, int8 seatId)
     {
         ((Player*)passenger)->UnsummonPetTemporaryIfAny();
 
-        ((Player*)passenger)->GetCamera().SetView(m_pBase);
+        // there should be some flag which says that camera is set or not
+        // eg. Vortex - non controllable and camera is set, Kologarn Arm non controllable and camera not set
+        // but this is temp solution
+        if (seat->second.seatInfo->m_flags & SEAT_FLAG_CAN_CONTROL)
+            ((Player*)passenger)->GetCamera().SetView(m_pBase);
 
         WorldPacket data(SMSG_FORCE_MOVE_ROOT, 8+4);
         data << passenger->GetPackGUID();
