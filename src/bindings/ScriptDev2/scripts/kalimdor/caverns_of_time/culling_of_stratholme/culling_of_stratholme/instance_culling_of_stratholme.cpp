@@ -1,4 +1,4 @@
-/* Copyright (C) 2006 - 2010 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+/* Copyright (C) 2006 - 2011 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -14,11 +14,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-
 /* ScriptData
-SDName: instance_culling_of_stratholme
-SD%Complete: ?%
-SDComment: by MaxXx2021
+SDName: Instance_culling_of_stratholme
+SD%Complete: 80%
+SDComment:
 SDCategory: Culling of Stratholme
 EndScriptData */
 
@@ -29,8 +28,9 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
 {
     instance_culling_of_stratholme(Map* pMap) : ScriptedInstance(pMap) {Initialize();};
 
+    std::string m_strInstData;
     uint8 m_uiCratesCount;
-    uint32 m_auiEncounter[7];
+    uint32 m_auiEncounter[MAX_ENCOUNTER];
     uint32 m_uiHeroicTimer;
     uint32 m_uiLastTimer;
 
@@ -74,6 +74,9 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
        m_auiEncounter[4] = 0;
        m_auiEncounter[5] = NOT_STARTED;
        m_auiEncounter[6] = NOT_STARTED;
+       m_auiEncounter[7] = NOT_STARTED;
+       m_auiEncounter[8] = NOT_STARTED;
+       m_auiEncounter[9] = NOT_STARTED;
 
        DoUpdateWorldState(WORLD_STATE_COS_CRATE_COUNT, 0);
        DoUpdateWorldState(WORLD_STATE_COS_CRATE_ON, 0);
@@ -115,12 +118,10 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
     {
         switch(pCreature->GetEntry())
         {
-            case NPC_CHROMI01: 
-                         pCreature->SetActiveObjectState(true);
+            case NPC_CHROMI01:
                          m_uiChromi01GUID = pCreature->GetGUID();
                          break;
             case NPC_CHROMI02:
-                         pCreature->SetActiveObjectState(true);
                          m_uiChromi02GUID = pCreature->GetGUID();
                          if (m_auiEncounter[0] == DONE)
                             pCreature->SetVisibility(VISIBILITY_ON);
@@ -131,26 +132,21 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
                          m_uiMikeGUID = pCreature->GetGUID();
                          break;
             case NPC_MAL_CORICS: 
-                         pCreature->SetActiveObjectState(true);
                          m_uiMalCoricsGUID = pCreature->GetGUID();
                          break;
             case NPC_GRIAN_STONE: 
-                         pCreature->SetActiveObjectState(true);
                          pCreature->SetStandState(UNIT_STAND_STATE_SIT_MEDIUM_CHAIR);
                          m_uiGrianStoneGUID = pCreature->GetGUID();
                          break;
             case NPC_JAMES: 
-                         pCreature->SetActiveObjectState(true);
                          pCreature->SetStandState(UNIT_STAND_STATE_SIT_MEDIUM_CHAIR);
                          m_uiJamesGUID = pCreature->GetGUID();
                          break;
             case NPC_FRAS_FRASIABI:
-                         pCreature->SetActiveObjectState(true);
                          pCreature->SetStandState(UNIT_STAND_STATE_SIT_MEDIUM_CHAIR); 
                          m_uiFrasCiabiGUID = pCreature->GetGUID();
                          break;
             case NPC_FORRESTER: 
-                         pCreature->SetActiveObjectState(true);
                          pCreature->SetStandState(UNIT_STAND_STATE_SIT_MEDIUM_CHAIR);
                          m_uiForrestenGUID = pCreature->GetGUID();
                          break;
@@ -161,7 +157,6 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
                          m_uiMoriganGUID = pCreature->GetGUID();
                          break;
             case NPC_PERELLI:
-                         pCreature->SetActiveObjectState(true);
                          m_uiPerelliGUID = pCreature->GetGUID();
                          break;
             case NPC_JENA:
@@ -169,14 +164,12 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
                          break;
             case NPC_MARTHA:
                          pCreature->CastSpell(pCreature, 58925, false);
-                         pCreature->SetActiveObjectState(true);
                          m_uiMarthaGUID = pCreature->GetGUID();
                          break;
             case NPC_MALCOLM:
                          m_uiMalcolmGUID = pCreature->GetGUID();
                          break;
             case NPC_DOG:
-                         pCreature->SetActiveObjectState(true);
                          m_uiDogGUID = pCreature->GetGUID();
                          break;
             case NPC_BARTLEBY:
@@ -187,9 +180,9 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
                          break;
             case NPC_ARTHAS:
                          m_uiArthasGUID = pCreature->GetGUID();
+                         pCreature->SetActiveObjectState(true);
                          break;
             case NPC_JAINA:
-                         pCreature->SetActiveObjectState(true);
                          m_uiJainaGUID = pCreature->GetGUID();
                          break;
             case NPC_INFINITE_CORRUPTOR: 
@@ -219,17 +212,16 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
 
     void ChromiWhispers()
     {
+        Map::PlayerList const &PlayerList = instance->GetPlayers();
 
-       Map::PlayerList const &PlayerList = instance->GetPlayers();
+        if (PlayerList.isEmpty())
+            return;
 
-       if (PlayerList.isEmpty())
-           return;
-
-       if (Creature* pChromi = instance->GetCreature(m_uiChromi01GUID))
-       {
-           for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-           {
-                pChromi->MonsterWhisper("Good work with crates! Come to me in front of Stratholme for your next assignment!", i->getSource(), false);
+        if (Creature* pChromi = instance->GetCreature(m_uiChromi01GUID))
+        {
+            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+            {
+//                pChromi->MonsterWhisper("Good work with crates! Come to me in front of Stratholme for your next assignment!", i->getSource(), false);
                 i->getSource()->KilledMonsterCredit(30996, pChromi->GetGUID());
                 i->getSource()->DestroyItemCount(ITEM_ARCANE_DISRUPTOR, 1, true);
             }
@@ -283,13 +275,37 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
                 {
                     DoRespawnGameObject(m_uiMalChestGUID, 30*MINUTE);
                     if (GameObject* pGo = instance->GetGameObject(m_uiMalChestGUID))
-                        pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_INTERACT_COND);
+                        pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+                    if (GameObject* pMalganisGate = instance->GetGameObject(m_uiExitGUID))
+                        pMalganisGate->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
                     if (Creature* pChromi2 = instance->GetCreature(m_uiChromi02GUID))
                         pChromi2->SetVisibility(VISIBILITY_OFF);
-                    if (GameObject* pGo = instance->GetGameObject(m_uiExitGUID))
-                        pGo->SetGoState(GO_STATE_ACTIVE);
                 }
                 break;
+            case TYPE_MEATHOOK:
+                m_auiEncounter[7] = uiData;
+                break;
+            case TYPE_SALRAMM :
+                m_auiEncounter[8] = uiData;
+                break;
+            case TYPE_EPOCH :
+                m_auiEncounter[9] = uiData;
+                break;
+
+        if (uiData == DONE)
+        {
+            OUT_SAVE_INST_DATA;
+
+            std::ostringstream saveStream;
+
+            for(uint8 i = 1; i < MAX_ENCOUNTER; ++i)
+                saveStream << m_auiEncounter[i] << " ";
+
+            m_strInstData = saveStream.str();
+
+            SaveToDB();
+            OUT_SAVE_INST_DATA_COMPLETE;
+        }
         }
     }
 
@@ -324,14 +340,31 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
                 return m_auiEncounter[5];
             case TYPE_MALGANIS:
                 return m_auiEncounter[6];
+            case TYPE_MEATHOOK:
+                return m_auiEncounter[7];
+            case TYPE_SALRAMM :
+                return m_auiEncounter[8];
+            case TYPE_EPOCH:
+                return m_auiEncounter[9];
         }
         return 0;
     }
+   
+    //Czy na globie mo¿na wchodziæ do insty w trakcie trwania eventu?
+  /*  bool IsEncounterInProgress() const
+    {
+        for (uint8 i = 1; i < MAX_ENCOUNTER; ++i)
+            if (m_auiEncounter[i] == IN_PROGRESS)
+                return true;
+
+        return false;
+    }*/ 
 
     uint64 GetData64(uint32 uiData)
     {
         switch(uiData)
         {
+            case NPC_CHROMI02: return m_uiChromi02GUID;
             case NPC_FORRESTER: return m_uiForrestenGUID;
             case NPC_JAMES: return m_uiJamesGUID;
             case NPC_FRAS_FRASIABI: return m_uiFrasCiabiGUID;
@@ -382,6 +415,35 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
        }
  
        return;
+    }
+
+
+const char* Save()
+    {
+        return m_strInstData.c_str();
+    }
+
+void Load(const char* strIn)
+    {
+        if (!strIn)
+        {
+            OUT_LOAD_INST_DATA_FAIL;
+            return;
+        }
+
+        OUT_LOAD_INST_DATA(strIn);
+
+        std::istringstream loadStream(strIn);
+
+        for(uint8 i = 1; i < MAX_ENCOUNTER; ++i)
+        {
+            loadStream >> m_auiEncounter[i];
+
+            if (m_auiEncounter[i] == IN_PROGRESS && i != 1)
+                m_auiEncounter[i] = NOT_STARTED;
+        }
+
+        OUT_LOAD_INST_DATA_COMPLETE;
     }
 };
 
