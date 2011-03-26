@@ -800,7 +800,7 @@ struct MANGOS_DLL_DECL npc_Vindicator_SedaiAI : public ScriptedAI
                 Creature* MagEscort2 = m_creature->GetMap()->GetCreature(Escort2);
                 Creature* pKrun = GetClosestCreatureWithEntry(m_creature, NPC_KRUN, 200.0f);
 
-            if(MagEscort1 && MagEscort2 && pKrun)
+            if(MagEscort1 && MagEscort2)
             {
                 switch(Phase)
                 {

@@ -212,8 +212,14 @@ extern void AddSC_boss_epoch_hunter();
 extern void AddSC_boss_lieutenant_drake();
 extern void AddSC_instance_old_hillsbrad();
 extern void AddSC_old_hillsbrad();
-extern void AddSC_culling_of_stratholme();                  // COT, culling_of_stratholme
+extern void AddSC_boss_lord_epoch();                    // COT, culling_of_stratholme
+extern void AddSC_culling_of_stratholme();
+extern void AddSC_boss_malganis();
+extern void AddSC_boss_meathook();
 extern void AddSC_instance_culling_of_stratholme();
+extern void AddSC_boss_salramm();
+extern void AddSC_culling_of_stratholmeAI();
+extern void AddSC_trash_culling_of_stratholme();
 extern void AddSC_dire_maul();                              // dire_maul
 extern void AddSC_instance_dire_maul();
 extern void AddSC_boss_celebras_the_cursed();               // maraudon
@@ -708,8 +714,16 @@ void AddScripts()
     AddSC_boss_lieutenant_drake();
     AddSC_instance_old_hillsbrad();
     AddSC_old_hillsbrad();
-    AddSC_culling_of_stratholme();                          // CoT, culling_of_stratholme
+    
+                                                            // CoT, culling_of_stratholme
+    AddSC_boss_lord_epoch();
+    AddSC_culling_of_stratholme();
+    AddSC_boss_malganis();
+    AddSC_boss_meathook();
     AddSC_instance_culling_of_stratholme();
+    AddSC_boss_salramm();
+    AddSC_culling_of_stratholmeAI();
+    AddSC_trash_culling_of_stratholme();
     AddSC_dire_maul();                                      // dire_maul
     AddSC_instance_dire_maul();
     AddSC_boss_celebras_the_cursed();                       // maraudon
