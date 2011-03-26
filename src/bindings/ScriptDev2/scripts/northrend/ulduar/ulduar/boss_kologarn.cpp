@@ -151,6 +151,7 @@ struct MANGOS_DLL_DECL boss_left_armAI : public ScriptedAI
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         SetCombatMovement(false);
+        pCreature->SetRespawnDelay(7*DAY);
         Reset();
     }
 
@@ -164,7 +165,7 @@ struct MANGOS_DLL_DECL boss_left_armAI : public ScriptedAI
 
     void JustDied(Unit* pKiller)
     {
-        if (!m_pInstance)
+        if (!m_pInstance || pKiller == m_creature)
             return;
 
         if (Creature* pTemp = m_creature->GetMap()->GetCreature( m_pInstance->GetData64(NPC_KOLOGARN)))
@@ -191,6 +192,7 @@ struct MANGOS_DLL_DECL boss_right_armAI : public ScriptedAI
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         SetCombatMovement(false);
+        pCreature->SetRespawnDelay(7*DAY);
         Reset();
     }
 
@@ -223,7 +225,7 @@ struct MANGOS_DLL_DECL boss_right_armAI : public ScriptedAI
 
     void JustDied(Unit* pKiller)
     {
-        if (!m_pInstance)
+        if (!m_pInstance || pKiller == m_creature)
             return;
 
         if (Creature* pTemp = m_pInstance->instance->GetCreature( m_pInstance->GetData64(NPC_KOLOGARN)))
@@ -239,6 +241,7 @@ struct MANGOS_DLL_DECL boss_right_armAI : public ScriptedAI
             {
                 pVictim->RemoveAurasDueToSpell(m_bIsRegularMode ? SPELL_STONE_GRIP : SPELL_STONE_GRIP_H);
                 pVictim->RemoveAurasDueToSpell(m_bIsRegularMode ? SPELL_STONE_GRIP_VEH : SPELL_STONE_GRIP_VEH_H);
+                pVictim->ExitVehicle();
             }
         }
     }
@@ -260,12 +263,16 @@ struct MANGOS_DLL_DECL boss_right_armAI : public ScriptedAI
                 {
                     pVictim->RemoveAurasDueToSpell(m_bIsRegularMode ? SPELL_STONE_GRIP : SPELL_STONE_GRIP_H);
                     pVictim->RemoveAurasDueToSpell(m_bIsRegularMode ? SPELL_STONE_GRIP_VEH : SPELL_STONE_GRIP_VEH_H);
+                    pVictim->ExitVehicle();
                 }
             }
         }
 
         if (m_uiStone_Grip_Timer < diff)
         {
+            if (!m_creature->CreateVehicleKit(380))
+                return;
+
             if (Creature* pTemp = m_pInstance->instance->GetCreature( m_pInstance->GetData64(NPC_KOLOGARN)))
                 DoScriptText(SAY_GRAB, pTemp);
 
@@ -278,6 +285,7 @@ struct MANGOS_DLL_DECL boss_right_armAI : public ScriptedAI
                 {
                     DoCast(pTarget, m_bIsRegularMode ? SPELL_STONE_GRIP_GRAB : SPELL_STONE_GRIP_GRAB_H, true);
                     m_uiGripTargetGUID[i] = pTarget->GetGUID();
+                    pTarget->EnterVehicle(m_creature->GetVehicleKit());
                 }
             }
             m_uiFreeDamage = 0;
@@ -330,6 +338,22 @@ struct MANGOS_DLL_DECL boss_kologarnAI : public ScriptedAI
         m_bIsEmerged        = false;
 
         m_creature->HandleEmote(EMOTE_STATE_SUBMERGED);
+
+        // reset arms (due to some evade problems)
+        if (VehicleKit *pVehKit = m_creature->GetVehicleKit())
+        {
+            if (Unit *pTmp = pVehKit->GetPassenger(0))
+            {
+                pTmp->SetVisibility(VISIBILITY_OFF);
+                pTmp->DealDamage(pTmp, pTmp->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NONE, NULL, false);
+            }
+            if (Unit *pTmp = pVehKit->GetPassenger(1))
+            {
+                pTmp->SetVisibility(VISIBILITY_OFF);
+                pTmp->DealDamage(pTmp, pTmp->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NONE, NULL, false);
+            }
+            pVehKit->InstallAllAccessories(m_creature->GetEntry());
+        }
     }
 
     void MoveInLineOfSight(Unit *pWho)
@@ -379,9 +403,6 @@ struct MANGOS_DLL_DECL boss_kologarnAI : public ScriptedAI
 
     void JustReachedHome()
     {
-        if (VehicleKit *pVehKit = m_creature->GetVehicleKit())
-            pVehKit->InstallAllAccessories(m_creature->GetEntry());
-
         if (m_pInstance)
             m_pInstance->SetData(TYPE_KOLOGARN, FAIL);
     }
@@ -601,8 +622,8 @@ struct MANGOS_DLL_DECL mob_kologarn_pit_kill_bunnyAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit *pWho)
     {
-        if (pWho->GetTypeId() == TYPEID_PLAYER)
-            if (m_creature->IsWithinLOSInMap(pWho) && pWho->GetPositionZ() - m_fPositionZ <= 30.0f)
+        if (pWho->GetTypeId() == TYPEID_PLAYER && !pWho->GetVehicle())
+            if (m_creature->IsWithinLOSInMap(pWho) && pWho->GetPositionZ() - m_fPositionZ <= 15.0f)
                 pWho->DealDamage(pWho, pWho->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NONE, NULL, false);
     }
 };
