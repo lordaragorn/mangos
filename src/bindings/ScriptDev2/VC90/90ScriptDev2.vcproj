@@ -1373,6 +1373,34 @@
 							RelativePath="..\scripts\kalimdor\caverns_of_time\culling_of_stratholme\instance_culling_of_stratholme.cpp"
 							>
 						</File>
+						<File
+							RelativePath="..\scripts\kalimdor\caverns_of_time\culling_of_stratholme\boss_infinite_corruptor.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\kalimdor\caverns_of_time\culling_of_stratholme\boss_lord_epoch.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\kalimdor\caverns_of_time\culling_of_stratholme\boss_malganis.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\kalimdor\caverns_of_time\culling_of_stratholme\boss_meathook.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\kalimdor\caverns_of_time\culling_of_stratholme\boss_salramm.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\kalimdor\caverns_of_time\culling_of_stratholme\trash_culling_of_stratholme.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\kalimdor\caverns_of_time\culling_of_stratholme\culling_of_stratholmeAI.cpp"
+							>
+						</File>
 					</Filter>
 					<Filter
 						Name="dark_portal"
@@ -2109,6 +2137,10 @@
 					<Filter
 						Name="halls_of_stone"
 						>
+						<File
+							RelativePath="..\scripts\northrend\ulduar\halls_of_stone\boss_krystallus.cpp"
+							>
+						</File>
 						<File
 							RelativePath="..\scripts\northrend\ulduar\halls_of_stone\boss_maiden_of_grief.cpp"
 							>

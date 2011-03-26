@@ -138,6 +138,13 @@ struct MANGOS_DLL_DECL instance_halls_of_stone : public ScriptedInstance
                 m_auiEncounter[3] = uiData;
                 break;
         }
+
+        // should be opened by Brann Bronzebeard in escort event
+        if (m_auiEncounter[1] == DONE && m_auiEncounter[2] == DONE)
+        {
+            if (GameObject *pGo = instance->GetGameObject(m_uiSjonnirDoorGUID))
+                pGo->SetGoState(GO_STATE_ACTIVE);
+        }
     }
 
     uint32 GetData(uint32 uiType)

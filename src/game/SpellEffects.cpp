@@ -389,6 +389,22 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                             damage = int32(unitTarget->GetMaxHealth() * 0.3f);
                         break;
                     }
+                    // Shatter (Krystallus)
+                    case 50811:
+                    case 61547:
+                    {
+                        if (unitTarget == m_caster)
+                        {
+                            damage = 0;
+                        }
+                        else if (unitTarget && m_caster)
+                        {
+                            int32 dist = (int32)unitTarget->GetDistance(m_caster);
+                            int32 dmgPerYd = (int32)(damage / GetSpellRadius(sSpellRadiusStore.LookupEntry(m_spellInfo->EffectRadiusIndex[effect_idx])));
+                            damage -= dmgPerYd * dist;
+                        }
+                        break;
+                    }
                     // Gargoyle Strike
                     case 51963:
                     {
@@ -1741,6 +1757,18 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                     return;
                 }
+                case 48046:                                 // Use Camera
+                {
+                    if (!unitTarget)
+                        return;
+
+                    // No despawn expected, nor any change in dynamic flags/other flags.
+                    // Need internal way to track if credit has been given for this object.
+
+                    // Iron Dwarf Snapshot Credit
+                    m_caster->CastSpell(m_caster, 48047, true, m_CastItem, NULL, unitTarget->GetObjectGuid());
+                    return;
+                }
                 case 49357:                                 // Brewfest Mount Transformation
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
@@ -2153,12 +2181,10 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     const uint32 spellShrink = 53805;
                     const uint32 spellTransf = 53806;
 
-                    if (Aura* pAura = m_caster->GetAura(spellShrink, EFFECT_INDEX_0))
+                    if (SpellAuraHolder* holder = m_caster->GetSpellAuraHolder(spellShrink))
                     {
-                        uint32 stackNum = pAura->GetStackAmount();
-
                         // chance to become pygmified (5, 10, 15 etc)
-                        if (roll_chance_i(stackNum*5))
+                        if (roll_chance_i(holder->GetStackAmount() * 5))
                         {
                             m_caster->RemoveAurasDueToSpell(spellShrink);
                             m_caster->CastSpell(m_caster, spellTransf, true);
@@ -2166,7 +2192,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         }
                     }
 
-                    if (m_caster->HasAura(spellTransf, EFFECT_INDEX_0))
+                    if (m_caster->HasAura(spellTransf))
                         return;
 
                     m_caster->CastSpell(m_caster, spellShrink, true);
@@ -5423,6 +5449,10 @@ void Spell::DoSummonGuardian(SpellEffectIndex eff_idx, uint32 forceFaction)
         m_caster->AddGuardian(spawnCreature);
 
         map->Add((Creature*)spawnCreature);
+
+        // Notify Summoner
+        if (m_caster->GetTypeId() == TYPEID_UNIT && ((Creature*)m_caster)->AI())
+            ((Creature*)m_caster)->AI()->JustSummoned(spawnCreature);
     }
 }
 
@@ -6849,6 +6879,16 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     m_caster->CastSpell(m_caster, 50217, true);
                     return;
                 }
+                case 44364:                                 // Rock Falcon Primer
+                {
+                    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
+                        return;
+
+                    // Are there anything special with this, a random chance or condition?
+                    // Feeding Rock Falcon
+                    unitTarget->CastSpell(unitTarget, m_spellInfo->CalculateSimpleValue(eff_idx), true, NULL, NULL, unitTarget->GetObjectGuid(), m_spellInfo);
+                    return;
+                }
                 case 44455:                                 // Character Script Effect Reverse Cast
                 {
                     if (!unitTarget || unitTarget->GetTypeId() != TYPEID_UNIT)
@@ -7181,6 +7221,15 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                         return;
 
                     ((Player*)caster)->RemoveSpellCategoryCooldown(82, true);
+                    return;
+                }
+                case 50810:                                 // Shatter (Krystallus)
+                case 61546:                                 // Shatter (h) (Krystallus)
+                {
+                    if (!unitTarget)
+                        return;
+
+                    unitTarget->CastSpell(unitTarget, m_spellInfo->Id + 1, true);
                     return;
                 }
                 case 50894:                                 // Zul'Drak Rat
@@ -8908,6 +8957,10 @@ void Spell::DoSummonCritter(SpellEffectIndex eff_idx, uint32 forceFaction)
     m_caster->SetMiniPet(critter);
 
     map->Add((Creature*)critter);
+
+    // Notify Summoner
+    if (m_caster->GetTypeId() == TYPEID_UNIT && ((Creature*)m_caster)->AI())
+        ((Creature*)m_caster)->AI()->JustSummoned(critter);
 }
 
 void Spell::EffectKnockBack(SpellEffectIndex eff_idx)

@@ -65,12 +65,14 @@ struct MANGOS_DLL_DECL boss_maiden_of_griefAI : public ScriptedAI
     uint32 m_uiStormTimer;
     uint32 m_uiShockTimer;
     uint32 m_uiPillarTimer;
+    uint32 m_uiPartingSorrowTimer;
 
     void Reset()
     {
         m_uiStormTimer = 5000;
         m_uiShockTimer = 10000;
         m_uiPillarTimer = 15000;
+        m_uiPartingSorrowTimer = 25000;
     }
 
     void Aggro(Unit* pWho)
@@ -131,6 +133,17 @@ struct MANGOS_DLL_DECL boss_maiden_of_griefAI : public ScriptedAI
         }
         else
             m_uiShockTimer -= uiDiff;
+
+        if (!m_bIsRegularMode)
+        {
+            if (m_uiPartingSorrowTimer < uiDiff)
+            {
+                if (DoCastSpellIfCan(m_creature->getVictim(), SPELL_PARTING_SORROW) == CAST_OK)
+                    m_uiPartingSorrowTimer = 25000;
+            }
+            else
+                m_uiPartingSorrowTimer -= uiDiff;
+        }
 
         DoMeleeAttackIfReady();
     }
