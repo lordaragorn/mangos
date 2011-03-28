@@ -242,7 +242,7 @@ void BattleGroundSA::ToggleTimer()
 
 void BattleGroundSA::EndBattleGround(Team winner)
 {
-    if (RoundScores[0].time == RoundScores[1].time) // Noone got in time
+    if (RoundScores[0].time == BG_SA_ROUNDLENGTH && RoundScores[1].time == BG_SA_ROUNDLENGTH) // Noone got in time
         winner = TEAM_NONE;
     else if (RoundScores[0].time < RoundScores[1].time)
         winner = RoundScores[0].winner == ALLIANCE ? ALLIANCE : HORDE;
@@ -294,14 +294,14 @@ void BattleGroundSA::Update(uint32 diff)
                 PlaySoundToAll(BG_SA_SOUND_GYD_VICTORY);
                 SendMessageToAll(m_tDefender == ALLIANCE ? LANG_BG_SA_ALLIANCE_TIMEOUT_END_1ROUND : LANG_BG_SA_HORDE_TIMEOUT_END_1ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
                 RoundScores[0].winner = m_tDefender;
-                RoundScores[0].time = m_uiRoundElapsedTimer;
+                RoundScores[0].time = BG_SA_ROUNDLENGTH;
                 ResetBattle(0, m_tDefender);
             }
             else // Timeout of second round
             {
                 SendMessageToAll(m_tDefender == ALLIANCE ? LANG_BG_SA_ALLIANCE_TIMEOUT_END_2ROUND : LANG_BG_SA_HORDE_TIMEOUT_END_2ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
                 RoundScores[1].winner = m_tDefender;
-                RoundScores[1].time = m_uiRoundElapsedTimer;
+                RoundScores[1].time = BG_SA_ROUNDLENGTH;
                 EndBattleGround(TEAM_NONE);
                 return;
             }
