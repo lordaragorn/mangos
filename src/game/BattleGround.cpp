@@ -1703,6 +1703,8 @@ void BattleGround::SpawnBGCreature(ObjectGuid guid, uint32 respawntime)
     if (respawntime == 0)
     {
         obj->Respawn();
+        if (CreatureData const *data = sObjectMgr.GetCreatureData(obj->GetGUIDLow()))
+            obj->SetRespawnDelay(data->spawntimesecs);
         map->Add(obj);
     }
     else

@@ -3163,6 +3163,9 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     if(((Creature*)unitTarget)->IsWorldBoss())
                         return;
 
+                if (unitTarget->GetObjectGuid().IsVehicle())
+                    return;
+
                 uint32 spellId = m_spellInfo->CalculateSimpleValue(EFFECT_INDEX_0);
                 unitTarget->CastSpell(m_caster->GetPositionX(), m_caster->GetPositionY(), m_caster->GetPositionZ(), spellId, true);
                 return;
@@ -9046,6 +9049,9 @@ void Spell::EffectKnockBack(SpellEffectIndex eff_idx)
 
     // Can't knockback rooted target
     if (unitTarget->hasUnitState(UNIT_STAT_ROOT))
+        return;
+
+    if (unitTarget->GetObjectGuid().IsVehicle())
         return;
 
     // Typhoon
