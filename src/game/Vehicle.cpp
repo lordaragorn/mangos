@@ -207,8 +207,10 @@ bool VehicleKit::AddPassenger(Unit *passenger, int8 seatId)
                 passenger->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 break;
         }
-        passenger->RemoveSpellsCausingAura(SPELL_AURA_MOD_SHAPESHIFT);
     }
+
+    if (seat->second.seatInfo->m_flags & SEAT_FLAG_CAN_CONTROL)
+        passenger->RemoveSpellsCausingAura(SPELL_AURA_MOD_SHAPESHIFT);
 
     if (seatInfo->m_flags & SEAT_FLAG_CAN_CONTROL)
     {
