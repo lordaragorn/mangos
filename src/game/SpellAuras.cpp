@@ -1157,6 +1157,19 @@ void Aura::HandleAddModifier(bool apply, bool Real)
                 break;
         }
 
+        // if spellmod modifying cast time affects a spell that is currently being cast:
+        // HACK: add 1 charge so it applies to the next spell cast
+        Spell *currSpell = GetTarget()->GetCurrentSpell(CURRENT_GENERIC_SPELL);
+
+        if (m_modifier.m_miscvalue == SPELLMOD_CASTING_TIME && currSpell &&
+            ((Player*)GetTarget())->IsAffectedBySpellmod(currSpell->m_spellInfo, m_spellmod, currSpell))
+        {
+            // HACK: client will see 2 aura charges instead of 1, so there should be some hidden charges or a boolean
+            // BUT if caster cancels the spell, then the holder will be removed (since spellProto says it has no charges
+            // must look for such auras with charges > 1
+            GetHolder()->SetAuraCharges(GetHolder()->GetAuraCharges()+1);
+        }
+
         m_spellmod = new SpellModifier(
             SpellModOp(m_modifier.m_miscvalue),
             SpellModType(m_modifier.m_auraname),            // SpellModType value == spell aura types
@@ -7737,6 +7750,11 @@ void Aura::PeriodicTick()
             uint32 procEx = isCrit ? PROC_EX_CRITICAL_HIT : PROC_EX_NORMAL_HIT;
 
             pdamage = (pdamage <= absorb + resist) ? 0 : (pdamage - absorb - resist);
+
+            if (pdamage <= 0)
+                procEx &= ~PROC_EX_DIRECT_DAMAGE;
+            else
+                procEx |= PROC_EX_DIRECT_DAMAGE;
 
             uint32 overkill = pdamage > target->GetHealth() ? pdamage - target->GetHealth() : 0;
             SpellPeriodicAuraLogInfo pInfo(this, pdamage, overkill, absorb, resist, 0.0f, isCrit);

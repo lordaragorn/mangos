@@ -676,6 +676,6 @@ INSERT INTO reference_loot_template VALUES
 (26946, 45634, 0, 2, 1, 1, 0, 0, 0);
 
 -- rare cache, despawned as default
-UPDATE gameobject SET spawntimesecs = -spawntimesecs WHERE id IN (194200, 194201);
+UPDATE gameobject SET spawntimesecs = -604800 WHERE id IN (194200, 194201);
 UPDATE gameobject SET spawnMask = 1 WHERE id = 194200;
 UPDATE gameobject SET spawnMask = 2 WHERE id = 194201;

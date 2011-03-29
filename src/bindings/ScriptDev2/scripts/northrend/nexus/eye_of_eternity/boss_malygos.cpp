@@ -1180,8 +1180,9 @@ struct MANGOS_DLL_DECL boss_malygosAI : public ScriptedAI
                         }
                         else if (pRandomTarget->GetTypeId() == TYPEID_PLAYER)
                         {
-                            if (VehicleKit *pVehKit = pRandomTarget->GetVehicleKit())
-                                pVictim = pVehKit->GetBase();
+                            if (Unit *pCharm = pRandomTarget->GetCharm())
+                                if (pCharm->GetGUID() != pRandomTarget->GetGUID())
+                                    pVictim = pCharm;
                         }
 
                         if (pVictim)
