@@ -19,6 +19,8 @@ UPDATE gameobject_template SET faction=0 WHERE entry = 191575;
 -- set factions for 2 Massive Seaforium Bombs
 UPDATE `gameobject_template` SET faction = 3 WHERE entry = 190753;
 UPDATE `gameobject_template` SET faction = 6 WHERE entry = 194086;
+-- bombs info
+UPDATE `gameobject_template` SET data4 = 1, data5 = 26, data7 = 10 WHERE entry = 190752;
 -- Titan Relic
 DELETE FROM gameobject WHERE guid IN (200001, 200002, 200003, 200004, 200005, 200006, 200007);
 INSERT INTO gameobject VALUES

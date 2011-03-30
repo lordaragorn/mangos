@@ -4414,7 +4414,9 @@ void Spell::SendLoot(uint64 guid, LootType loottype)
             case GAMEOBJECT_TYPE_GOOBER:
                 gameObjTarget->Use(m_caster);
                 return;
-
+            case GAMEOBJECT_TYPE_TRAP:
+                gameObjTarget->SetLootState(GO_JUST_DEACTIVATED);
+                return;
             case GAMEOBJECT_TYPE_CHEST:
                 gameObjTarget->Use(m_caster);
                 // Don't return, let loots been taken

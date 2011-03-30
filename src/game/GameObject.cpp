@@ -191,7 +191,7 @@ void GameObject::Update(uint32 update_diff, uint32 /*p_time*/)
                 {
                     // Arming Time for GAMEOBJECT_TYPE_TRAP (6)
                     Unit* owner = GetOwner();
-                    if (owner && ((Player*)owner)->isInCombat())
+                    if (owner && ((Player*)owner)->isInCombat() || GetGOInfo()->id == 190752)
                         m_cooldownTime = time(NULL) + GetGOInfo()->trap.startDelay;
                     m_lootState = GO_READY;
                     break;
@@ -290,7 +290,7 @@ void GameObject::Update(uint32 update_diff, uint32 /*p_time*/)
                     //FIXME: this is activation radius (in different casting radius that must be selected from spell data)
                     //TODO: move activated state code (cast itself) to GO_ACTIVATED, in this place only check activating and set state
                     float radius = float(goInfo->trap.radius);
-                    if (!radius)
+                    if (!radius && goInfo->id != 190752)
                     {
                         if (goInfo->trap.cooldown != 3)     // cast in other case (at some triggering/linked go/etc explicit call)
                             return;
@@ -326,6 +326,10 @@ void GameObject::Update(uint32 update_diff, uint32 /*p_time*/)
                         Cell::VisitWorldObjects(this,checker, radius);
                         ok = p_ok;
                     }
+
+                    // Massive Seaforium charge - explode always after 10sec even with no targets
+                    if (goInfo->id == 190752)
+                        ok = owner;
 
                     if (ok)
                     {
