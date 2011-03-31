@@ -9367,6 +9367,13 @@ void Spell::EffectTransmitted(SpellEffectIndex eff_idx)
     cMap->Add(pGameObj);
 
     pGameObj->SummonLinkedTrapIfAny();
+
+    if (m_caster->GetTypeId() == TYPEID_PLAYER)
+    {
+        if (BattleGround *bg = ((Player*)m_caster)->GetBattleGround())
+            if (bg->GetTypeID() == BATTLEGROUND_SA)
+                ((BattleGroundSA*)bg)->EventSpawnGOSA((Player*)m_caster, pGameObj, fx, fy, fz);
+    }
 }
 
 void Spell::EffectProspecting(SpellEffectIndex /*eff_idx*/)

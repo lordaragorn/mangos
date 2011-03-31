@@ -67,6 +67,16 @@ void BattleGroundSA::PrepareRound()
         // Despawn all graveyards
         for (uint8 z = 1; z < 5; ++z)
             SpawnEvent(i, z, false);
+
+        // spawn proper graveyard banner
+        SpawnEvent(i, defender_occupier, true);
+
+        m_prevGyd[i] = 0;
+        m_GydTimers[i] = 0;
+        m_BannerTimers[i].timer = 0;
+        m_Gyd[i] = defender_occupier;
+        m_ActiveEvents[i] = defender_occupier;
+        _GydOccupied(i, m_tDefender);
     }
 
     // graveyards on beach and near relic
@@ -132,12 +142,15 @@ void BattleGroundSA::ResetBattle(uint32 winner, Team teamDefending)
     SetStartTime(0);
     ToggleTimer();
     PrepareRound();
+    StartShips(); // reset ships positions
+    m_bShipsStarted = false;
 
     for (BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
     {
         if (Player *plr = sObjectMgr.GetPlayer(itr->first))
             TeleportPlayerToCorrectLoc(plr, true);
     }
+
     UpdateWorldStates();
 }
 
@@ -156,23 +169,48 @@ bool BattleGroundSA::SetupBattleGround()
 
 bool BattleGroundSA::SetupShips()
 {
-    for (int i = BG_SA_BOAT_ONE; i <= BG_SA_BOAT_TWO; i++)
-        for (BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
-            if (Player *plr = sObjectMgr.GetPlayer(itr->first))
-                SendTransportsRemove(plr);
+    /*for (BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
+        if (Player *plr = sObjectMgr.GetPlayer(itr->first))
+            SendTransportsRemove(plr);*/
+
+    GameObject *boat1 = GetBGObject(BG_SA_BOAT_ONE);
+    GameObject *boat2 = GetBGObject(BG_SA_BOAT_TWO);
+
+    if (boat1)
+    {
+        if (GameObjectInfo const* goinfo = ObjectMgr::GetGameObjectInfo(BG_SA_BOAT_ONE_A))
+        {
+            boat1->SetUInt32Value(GAMEOBJECT_LEVEL, goinfo->transport.pause);
+            if (goinfo->transport.startOpen)
+                boat1->SetGoState(GO_STATE_ACTIVE);
+        }
+    }
+    if (boat2)
+    {
+        if (GameObjectInfo const* goinfo = ObjectMgr::GetGameObjectInfo(BG_SA_BOAT_TWO_A))
+        {
+            boat2->SetUInt32Value(GAMEOBJECT_LEVEL, goinfo->transport.pause);
+            if (goinfo->transport.startOpen)
+                boat2->SetGoState(GO_STATE_ACTIVE);
+        }
+    }
+
+    if (boat1 && boat2)
+        return true;
+
     for (uint8 i = BG_SA_BOAT_ONE; i <= BG_SA_BOAT_TWO; i++)
     {
         uint32 boatid=0;
         switch (i)
         {
             case BG_SA_BOAT_ONE:
-                boatid = m_tDefender == ALLIANCE ? BG_SA_BOAT_ONE_H : BG_SA_BOAT_ONE_A;
+                boatid = /*m_tDefender == ALLIANCE ? BG_SA_BOAT_ONE_H : */BG_SA_BOAT_ONE_A;
                 break;
             case BG_SA_BOAT_TWO:
-                boatid = m_tDefender == ALLIANCE ? BG_SA_BOAT_TWO_H : BG_SA_BOAT_TWO_A;
+                boatid = /*m_tDefender == ALLIANCE ? BG_SA_BOAT_TWO_H : */BG_SA_BOAT_TWO_A;
                 break;
         }
-        if (!(AddObject(i, boatid, BG_SA_START_LOCATIONS[i + 5][0], BG_SA_START_LOCATIONS[i + 5][1], BG_SA_START_LOCATIONS[i + 5][2]+ (m_tDefender == ALLIANCE ? -3.750f: 0) , BG_SA_START_LOCATIONS[i + 5][3], 0, 0, 0, 0, RESPAWN_ONE_DAY)))
+        if (!(AddObject(i, boatid, BG_SA_START_LOCATIONS[i + 5][0], BG_SA_START_LOCATIONS[i + 5][1], BG_SA_START_LOCATIONS[i + 5][2]/*+ (m_tDefender == ALLIANCE ? -3.750f: 0)*/ , BG_SA_START_LOCATIONS[i + 5][3], 0, 0, 0, 0, RESPAWN_ONE_DAY)))
         {
             sLog.outError("SA_ERROR: Can't spawn ships!");
             return false;
@@ -184,10 +222,9 @@ bool BattleGroundSA::SetupShips()
     SpawnBGObject(m_BgObjects[BG_SA_BOAT_ONE], RESPAWN_IMMEDIATELY);
     SpawnBGObject(m_BgObjects[BG_SA_BOAT_TWO], RESPAWN_IMMEDIATELY);
 
-    for (int i = BG_SA_BOAT_ONE; i <= BG_SA_BOAT_TWO; i++)
-        for (BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
-            if (Player *plr = sObjectMgr.GetPlayer(itr->first))
-                SendTransportInit(plr);
+    for (BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
+        if (Player *plr = sObjectMgr.GetPlayer(itr->first))
+            SendTransportInit(plr);
     return true;
 }
 
@@ -242,12 +279,15 @@ void BattleGroundSA::ToggleTimer()
 
 void BattleGroundSA::EndBattleGround(Team winner)
 {
-    if (RoundScores[0].time == BG_SA_ROUNDLENGTH && RoundScores[1].time == BG_SA_ROUNDLENGTH) // Noone got in time
-        winner = TEAM_NONE;
-    else if (RoundScores[0].time < RoundScores[1].time)
-        winner = RoundScores[0].winner == ALLIANCE ? ALLIANCE : HORDE;
-    else
-        winner = RoundScores[1].winner == ALLIANCE ? ALLIANCE : HORDE;
+    if (!winner)
+    {
+        if (RoundScores[0].time == BG_SA_ROUNDLENGTH && RoundScores[1].time == BG_SA_ROUNDLENGTH) // Noone got in time
+            winner = TEAM_NONE;
+        else if (RoundScores[0].time < RoundScores[1].time)
+            winner = RoundScores[0].winner == ALLIANCE ? ALLIANCE : HORDE;
+        else
+            winner = RoundScores[1].winner == ALLIANCE ? ALLIANCE : HORDE;
+    }
 
     //win reward
     if(winner)
@@ -292,14 +332,14 @@ void BattleGroundSA::Update(uint32 diff)
             if(GetCurrentRound() == BG_SA_ROUND_ONE) // Timeout of first round
             {
                 PlaySoundToAll(BG_SA_SOUND_GYD_VICTORY);
-                SendMessageToAll(m_tDefender == ALLIANCE ? LANG_BG_SA_ALLIANCE_TIMEOUT_END_1ROUND : LANG_BG_SA_HORDE_TIMEOUT_END_1ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
+                SendWarningToAll(m_tDefender == ALLIANCE ? LANG_BG_SA_ALLIANCE_TIMEOUT_END_1ROUND : LANG_BG_SA_HORDE_TIMEOUT_END_1ROUND);
                 RoundScores[0].winner = m_tDefender;
                 RoundScores[0].time = BG_SA_ROUNDLENGTH;
                 ResetBattle(0, m_tDefender);
             }
             else // Timeout of second round
             {
-                SendMessageToAll(m_tDefender == ALLIANCE ? LANG_BG_SA_ALLIANCE_TIMEOUT_END_2ROUND : LANG_BG_SA_HORDE_TIMEOUT_END_2ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
+                SendWarningToAll(m_tDefender == ALLIANCE ? LANG_BG_SA_ALLIANCE_TIMEOUT_END_2ROUND : LANG_BG_SA_HORDE_TIMEOUT_END_2ROUND);
                 RoundScores[1].winner = m_tDefender;
                 RoundScores[1].time = BG_SA_ROUNDLENGTH;
                 EndBattleGround(TEAM_NONE);
@@ -344,8 +384,8 @@ void BattleGroundSA::Update(uint32 diff)
                     RewardReputationToTeam((teamIndex == 0) ? 1050:1085, 65, (teamIndex == 0) ? ALLIANCE:HORDE);
                     switch(gyd)
                     {
-                        case 0: SpawnEvent(SA_EVENT_ADD_VECH_W, 0, true);break;
-                        case 1: SpawnEvent(SA_EVENT_ADD_VECH_E, 0, true);break;
+                        case BG_SA_GRAVE_W: SpawnEvent(SA_EVENT_ADD_VECH_W, 0, true);break;
+                        case BG_SA_GRAVE_E: SpawnEvent(SA_EVENT_ADD_VECH_E, 0, true);break;
                     }
                     if (teamIndex == 0)
                     {
@@ -422,20 +462,6 @@ void BattleGroundSA::StartingEventOpenDoors()
 
     SpawnEvent(SA_EVENT_ADD_NPC, 0, true);  // spawn NPCs (vehicles)
     SpawnEvent(SA_EVENT_ADD_BOMB, m_tDefender == ALLIANCE ? 1 : 0, true); // spawn seaforium charges
-
-    // set up graveyards
-    for (uint8 i = 0; i < BG_SA_GRY_MAX; ++i)
-    {
-        // spawn proper graveyard banner
-        SpawnEvent(i, defender_occupier, true);
-
-        m_prevGyd[i] = 0;
-        m_GydTimers[i] = 0;
-        m_BannerTimers[i].timer = 0;
-        m_Gyd[i] = defender_occupier;
-        m_ActiveEvents[i] = defender_occupier;
-        _GydOccupied(i, m_tDefender);
-    }
 
     ToggleTimer();
     UpdateWorldStates();
@@ -533,7 +559,7 @@ void BattleGroundSA::EventPlayerClickedOnFlag(Player *source, GameObject* target
         // If last state is NOT occupied, change node to enemy-contested
         if (m_prevGyd[gyd] < BG_SA_GRAVE_TYPE_OCCUPIED)
         {
-            //UpdatePlayerScore(source, SCORE_BASES_ASSAULTED, 1);
+            UpdatePlayerScore(source, SCORE_BASES_ASSAULTED, 1);
             m_prevGyd[gyd] = m_Gyd[gyd];
             m_Gyd[gyd] = teamIndex + BG_SA_GRAVE_TYPE_CONTESTED;
             // create new contested banner
@@ -544,12 +570,12 @@ void BattleGroundSA::EventPlayerClickedOnFlag(Player *source, GameObject* target
             if (teamIndex == BG_TEAM_ALLIANCE)
             {
                 // SendMessage2ToAll(LANG_BG_SA_AH_PRECIPITATES_GRAVEYARD,CHAT_MSG_BG_SYSTEM_ALLIANCE, source, LANG_BG_ALLY, _GydName(gyd));
-                SendWarningToAllSA(gyd, STATUS_CLAIMED, ALLIANCE);
+                SendWarningToAllSA(gyd, STATUS_CONQUESTED, ALLIANCE);
             }
             else
             {
                 // SendMessage2ToAll(LANG_BG_SA_AH_PRECIPITATES_GRAVEYARD,CHAT_MSG_BG_SYSTEM_HORDE, source, LANG_BG_HORDE, _GydName(gyd));
-                SendWarningToAllSA(gyd, STATUS_CLAIMED, HORDE);
+                SendWarningToAllSA(gyd, STATUS_CONQUESTED, HORDE);
             }
         }
         // If contested, change back to occupied
@@ -582,7 +608,7 @@ void BattleGroundSA::EventPlayerClickedOnFlag(Player *source, GameObject* target
     {
         if (m_Gyd[gyd] == BG_SA_GRAVE_STATUS_HORDE_OCCUPIED)
         {
-            //UpdatePlayerScore(source, SCORE_BASES_ASSAULTED, 1);
+            UpdatePlayerScore(source, SCORE_BASES_ASSAULTED, 1);
             m_prevGyd[gyd] = m_Gyd[gyd];
             m_Gyd[gyd] = teamIndex + BG_SA_GRAVE_TYPE_CONTESTED;
             // create new contested banner
@@ -591,7 +617,7 @@ void BattleGroundSA::EventPlayerClickedOnFlag(Player *source, GameObject* target
             m_GydTimers[gyd] = BG_SA_FLAG_CAPTURING_TIME;
 
             // SendMessage2ToAll(LANG_BG_SA_AH_PRECIPITATES_GRAVEYARD,CHAT_MSG_BG_SYSTEM_ALLIANCE, source, LANG_BG_ALLY, _GydName(gyd));
-            SendWarningToAllSA(gyd, STATUS_CLAIMED, ALLIANCE);
+            SendWarningToAllSA(gyd, STATUS_CONQUESTED, ALLIANCE);
 
             sound = BG_SA_SOUND_GYD_ASSAULTED_ALLIANCE;
         }
@@ -602,7 +628,7 @@ void BattleGroundSA::EventPlayerClickedOnFlag(Player *source, GameObject* target
     {
         if (m_Gyd[gyd] == BG_SA_GRAVE_STATUS_ALLY_OCCUPIED)
         {
-            //UpdatePlayerScore(source, SCORE_BASES_ASSAULTED, 1);
+            UpdatePlayerScore(source, SCORE_BASES_ASSAULTED, 1);
             m_prevGyd[gyd] = m_Gyd[gyd];
             m_Gyd[gyd] = teamIndex + BG_SA_GRAVE_TYPE_CONTESTED;
             // create new contested banner
@@ -611,7 +637,7 @@ void BattleGroundSA::EventPlayerClickedOnFlag(Player *source, GameObject* target
             m_GydTimers[gyd] = BG_SA_FLAG_CAPTURING_TIME;
 
             // SendMessage2ToAll(LANG_BG_SA_AH_PRECIPITATES_GRAVEYARD,CHAT_MSG_BG_SYSTEM_HORDE, source, LANG_BG_HORDE, _GydName(gyd));
-            SendWarningToAllSA(gyd, STATUS_CLAIMED, HORDE);
+            SendWarningToAllSA(gyd, STATUS_CONQUESTED, HORDE);
 
             sound = BG_SA_SOUND_GYD_ASSAULTED_HORDE;
         }
@@ -623,7 +649,7 @@ void BattleGroundSA::EventPlayerClickedOnFlag(Player *source, GameObject* target
 
 void BattleGroundSA::EventSpawnGOSA(Player *owner, GameObject* obj, float x, float y, float z)
 {
-    SendMessageToAll(LANG_BG_SA_INSTALL_BOMB, (m_tDefender == ALLIANCE) ? CHAT_MSG_BG_SYSTEM_HORDE : CHAT_MSG_BG_SYSTEM_ALLIANCE , owner);
+    SendWarningToAll(LANG_BG_SA_INSTALL_BOMB);
 }
 
 void BattleGroundSA::SendMessageSA(Player *player, uint32 type, uint32 name)
@@ -658,12 +684,12 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
                     SendMessageSA(player, BG_SA_ATTACK, _GatesName(target_obj));
                     break;
                 case 19836:
-                    SendMessageSA(player, BG_SA_DAMAGE, _GatesName(target_obj));
+                    //SendMessageSA(player, BG_SA_DAMAGE, _GatesName(target_obj));
                     SendWarningToAllSA(NULL, NULL, TEAM_NONE, true, type);
                     UpdateWorldState(BG_SA_GateStatus[type], GateStatus[type] = BG_SA_GO_GATES_DAMAGE);
                     break;
                 case 19837:
-                    SendMessageSA(player, BG_SA_DESTROY, _GatesName(target_obj));
+                    //SendMessageSA(player, BG_SA_DESTROY, _GatesName(target_obj));
                     SendWarningToAllSA(NULL, NULL, TEAM_NONE, true, type, true);
                     UpdateWorldState(BG_SA_GateStatus[type], GateStatus[type] = BG_SA_GO_GATES_DESTROY);
                     UpdatePlayerScore(player, SCORE_GATES_DESTROYED, 1);
@@ -682,12 +708,12 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
                     SendMessageSA(player, BG_SA_ATTACK, _GatesName(target_obj));
                     break;
                 case 19041:
-                    SendMessageSA(player, BG_SA_DAMAGE, _GatesName(target_obj));
+                    //SendMessageSA(player, BG_SA_DAMAGE, _GatesName(target_obj));
                     SendWarningToAllSA(NULL, NULL, TEAM_NONE, true, type);
                     UpdateWorldState(BG_SA_GateStatus[type], GateStatus[type] = BG_SA_GO_GATES_DAMAGE);
                     break;
                 case 19046:
-                    SendMessageSA(player, BG_SA_DESTROY, _GatesName(target_obj));
+                    //SendMessageSA(player, BG_SA_DESTROY, _GatesName(target_obj));
                     SendWarningToAllSA(NULL, NULL, TEAM_NONE, true, type, true);
                     UpdateWorldState(BG_SA_GateStatus[type], GateStatus[type] = BG_SA_GO_GATES_DESTROY);
                     UpdatePlayerScore(player, SCORE_GATES_DESTROYED, 1);
@@ -706,12 +732,12 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
                     SendMessageSA(player, BG_SA_ATTACK, _GatesName(target_obj));
                     break;
                 case 19040:
-                    SendMessageSA(player, BG_SA_DAMAGE, _GatesName(target_obj));
+                    //SendMessageSA(player, BG_SA_DAMAGE, _GatesName(target_obj));
                     SendWarningToAllSA(NULL, NULL, TEAM_NONE, true, type);
                     UpdateWorldState(BG_SA_GateStatus[type], GateStatus[type] = BG_SA_GO_GATES_DAMAGE);
                     break;
                 case 19045:
-                    SendMessageSA(player, BG_SA_DESTROY, _GatesName(target_obj));
+                    //SendMessageSA(player, BG_SA_DESTROY, _GatesName(target_obj));
                     SendWarningToAllSA(NULL, NULL, TEAM_NONE, true, type, true);
                     UpdateWorldState(BG_SA_GateStatus[type], GateStatus[type] = BG_SA_GO_GATES_DESTROY);
                     UpdatePlayerScore(player, SCORE_GATES_DESTROYED, 1);
@@ -730,12 +756,12 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
                     SendMessageSA(player, BG_SA_ATTACK, _GatesName(target_obj));
                     break;
                 case 19043:
-                    SendMessageSA(player, BG_SA_DAMAGE, _GatesName(target_obj));
+                    //SendMessageSA(player, BG_SA_DAMAGE, _GatesName(target_obj));
                     SendWarningToAllSA(NULL, NULL, TEAM_NONE, true, type);
                     UpdateWorldState(BG_SA_GateStatus[type], GateStatus[type] = BG_SA_GO_GATES_DAMAGE);
                     break;
                 case 19048:
-                    SendMessageSA(player, BG_SA_DESTROY, _GatesName(target_obj));
+                    //SendMessageSA(player, BG_SA_DESTROY, _GatesName(target_obj));
                     SendWarningToAllSA(NULL, NULL, TEAM_NONE, true, type, true);
                     UpdateWorldState(BG_SA_GateStatus[type], GateStatus[type] = BG_SA_GO_GATES_DESTROY);
                     UpdatePlayerScore(player, SCORE_GATES_DESTROYED, 1);
@@ -754,12 +780,12 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
                     SendMessageSA(player, BG_SA_ATTACK, _GatesName(target_obj));
                     break;
                 case 19042:
-                    SendMessageSA(player, BG_SA_DAMAGE, _GatesName(target_obj));
+                    //SendMessageSA(player, BG_SA_DAMAGE, _GatesName(target_obj));
                     SendWarningToAllSA(NULL, NULL, TEAM_NONE, true, type);
                     UpdateWorldState(BG_SA_GateStatus[type], GateStatus[type] = BG_SA_GO_GATES_DAMAGE);
                     break;
                 case 19047:
-                    SendMessageSA(player, BG_SA_DESTROY, _GatesName(target_obj));
+                    //SendMessageSA(player, BG_SA_DESTROY, _GatesName(target_obj));
                     SendWarningToAllSA(NULL, NULL, TEAM_NONE, true, type, true);
                     UpdateWorldState(BG_SA_GateStatus[type], GateStatus[type] = BG_SA_GO_GATES_DESTROY);
                     UpdatePlayerScore(player, SCORE_GATES_DESTROYED, 1);
@@ -778,12 +804,12 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
                     SendMessageSA(player, BG_SA_ATTACK, _GatesName(target_obj));
                     break;
                 case 19044:
-                    SendMessageSA(player, BG_SA_DAMAGE, _GatesName(target_obj));
+                    //SendMessageSA(player, BG_SA_DAMAGE, _GatesName(target_obj));
                     SendWarningToAllSA(NULL, NULL, TEAM_NONE, true, type);
                     UpdateWorldState(BG_SA_GateStatus[type], GateStatus[type] = BG_SA_GO_GATES_DAMAGE);
                     break;
                 case 19049:
-                    SendMessageSA(player, BG_SA_DESTROY, _GatesName(target_obj));
+                    //SendMessageSA(player, BG_SA_DESTROY, _GatesName(target_obj));
                     SendWarningToAllSA(NULL, NULL, TEAM_NONE, true, type, true);
                     UpdateWorldState(BG_SA_GateStatus[type], GateStatus[type] = BG_SA_GO_GATES_DESTROY);
                     UpdatePlayerScore(player, SCORE_GATES_DESTROYED, 1);
@@ -807,7 +833,7 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
                     RoundScores[0].winner = m_tDefender == ALLIANCE ? HORDE : ALLIANCE;
                     RoundScores[0].time = m_uiRoundElapsedTimer;
                     PlaySoundToAll(BG_SA_SOUND_GYD_VICTORY);
-                    SendMessageToAll(m_tDefender == HORDE ? LANG_BG_SA_ALLIANCE_END_1ROUND : LANG_BG_SA_HORDE_END_1ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
+                    SendWarningToAll(m_tDefender == HORDE ? LANG_BG_SA_ALLIANCE_END_1ROUND : LANG_BG_SA_HORDE_END_1ROUND);
                     RewardHonorToTeam(150, (teamIndex == 0) ? ALLIANCE:HORDE);
                     RewardReputationToTeam((teamIndex == 0) ? 1050:1085, 100, (teamIndex == 0) ? ALLIANCE:HORDE);
                     ResetBattle(player->GetTeam(), m_tDefender);
@@ -816,7 +842,7 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
                 {
                     RoundScores[1].winner = m_tDefender == ALLIANCE ? HORDE : ALLIANCE;
                     RoundScores[1].time = m_uiRoundElapsedTimer;
-                    SendMessageToAll(m_tDefender == HORDE ? LANG_BG_SA_ALLIANCE_END_2ROUND : LANG_BG_SA_HORDE_END_2ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
+                    SendWarningToAll(m_tDefender == HORDE ? LANG_BG_SA_ALLIANCE_END_2ROUND : LANG_BG_SA_HORDE_END_2ROUND);
                     RewardHonorToTeam(150, (teamIndex == 0) ? ALLIANCE:HORDE);
                     RewardReputationToTeam((teamIndex == 0) ? 1050:1085, 100, (teamIndex == 0) ? ALLIANCE:HORDE);
                     EndBattleGround(player->GetTeam());
