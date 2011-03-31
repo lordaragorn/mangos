@@ -833,16 +833,16 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
                     RoundScores[0].winner = m_tDefender == ALLIANCE ? HORDE : ALLIANCE;
                     RoundScores[0].time = m_uiRoundElapsedTimer;
                     PlaySoundToAll(BG_SA_SOUND_GYD_VICTORY);
-                    SendWarningToAll(m_tDefender == HORDE ? LANG_BG_SA_ALLIANCE_END_1ROUND : LANG_BG_SA_HORDE_END_1ROUND);
-                    RewardHonorToTeam(150, (teamIndex == 0) ? ALLIANCE:HORDE);
-                    RewardReputationToTeam((teamIndex == 0) ? 1050:1085, 100, (teamIndex == 0) ? ALLIANCE:HORDE);
+                    SendWarningToAll(player->GetTeam() == BG_TEAM_ALLIANCE ? LANG_BG_SA_ALLIANCE_END_1ROUND : LANG_BG_SA_HORDE_END_1ROUND);
+                    RewardHonorToTeam(150, player->GetTeam());
+                    RewardReputationToTeam((teamIndex == BG_TEAM_ALLIANCE) ? 1050:1085, 100, player->GetTeam());
                     ResetBattle(player->GetTeam(), m_tDefender);
                 }
                 else // Victory at second round
                 {
-                    RoundScores[1].winner = m_tDefender == ALLIANCE ? HORDE : ALLIANCE;
+                    RoundScores[1].winner = player->GetTeam() == BG_TEAM_ALLIANCE ? ALLIANCE : HORDE;
                     RoundScores[1].time = m_uiRoundElapsedTimer;
-                    SendWarningToAll(m_tDefender == HORDE ? LANG_BG_SA_ALLIANCE_END_2ROUND : LANG_BG_SA_HORDE_END_2ROUND);
+                    SendWarningToAll(player->GetTeam() == ALLIANCE ? LANG_BG_SA_ALLIANCE_END_2ROUND : LANG_BG_SA_HORDE_END_2ROUND);
                     RewardHonorToTeam(150, (teamIndex == 0) ? ALLIANCE:HORDE);
                     RewardReputationToTeam((teamIndex == 0) ? 1050:1085, 100, (teamIndex == 0) ? ALLIANCE:HORDE);
                     EndBattleGround(player->GetTeam());
