@@ -1,5 +1,5 @@
 -- Instance Eye of Eternity
--- Instance last changes: a612
+-- Instance last changes: a641
 
 -- Set instance script
 UPDATE instance_template SET ScriptName = 'instance_eye_of_eternity' WHERE map = 616;

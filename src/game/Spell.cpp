@@ -522,7 +522,6 @@ void Spell::FillTargetMap()
                     case TARGET_ALL_ENEMY_IN_AREA_CHANNELED:
                     case TARGET_ALL_FRIENDLY_UNITS_IN_AREA:
                     case TARGET_AREAEFFECT_GO_AROUND_DEST:
-                    case TARGET_RANDOM_NEARBY_DEST:
                         // triggered spells get dest point from default target set, ignore it
                         if (!(m_targets.m_targetMask & TARGET_FLAG_DEST_LOCATION) || m_IsTriggeredSpell)
                             if (WorldObject* castObject = GetCastingObject())
@@ -545,6 +544,7 @@ void Spell::FillTargetMap()
                     case TARGET_POINT_AT_NW:
                     case TARGET_POINT_AT_SE:
                     case TARGET_POINT_AT_SW:
+                    case TARGET_RANDOM_NEARBY_DEST:
                         // need some target for processing
                         SetTargetMap(SpellEffectIndex(i), m_spellInfo->EffectImplicitTargetA[i], tmpUnitMap);
                         SetTargetMap(SpellEffectIndex(i), m_spellInfo->EffectImplicitTargetB[i], tmpUnitMap);
@@ -712,6 +712,9 @@ void Spell::prepareDataForTriggerSystem()
                     m_canTrigger = true;
                 // Fingers of Frost: triggered by Frost/Ice Armor
                 else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000100000))
+                    m_canTrigger = true;
+                // Living Bomb: final explosion
+                else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0001000000000000))
                     m_canTrigger = true;
                 break;
             case SPELLFAMILY_WARLOCK:

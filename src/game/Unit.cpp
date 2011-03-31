@@ -1709,6 +1709,7 @@ void Unit::CalculateMeleeDamage(Unit *pVictim, uint32 damage, CalcDamageInfo *da
     if(int32(damageInfo->damage) > 0)
     {
         damageInfo->procVictim |= PROC_FLAG_TAKEN_ANY_DAMAGE;
+        damageInfo->procEx |= PROC_EX_DIRECT_DAMAGE;
 
         // Calculate absorb & resists
         uint32 absorb_affected_damage = CalcNotIgnoreAbsorbDamage(damageInfo->damage,damageInfo->damageSchoolMask);
@@ -1722,6 +1723,8 @@ void Unit::CalculateMeleeDamage(Unit *pVictim, uint32 damage, CalcDamageInfo *da
         if (damageInfo->resist)
             damageInfo->HitInfo|=HITINFO_RESIST;
 
+        if (damageInfo->damage <= 0)
+            damageInfo->procEx &= ~PROC_EX_DIRECT_DAMAGE;
     }
     else // Umpossible get negative result but....
         damageInfo->damage = 0;
@@ -3077,7 +3080,7 @@ SpellMissInfo Unit::MeleeSpellHitResult(Unit *pVictim, SpellEntry const *spell, 
     {
         uint32 missChance = uint32(MeleeSpellMissChance(pVictim, attType, fullSkillDiff, spell)*100.0f);
         // Roll miss
-        tmp += missChance;
+        uint32 tmp = spell->AttributesEx3 & SPELL_ATTR_EX3_CANT_MISS ? 0 : missChance;
         if (roll < tmp)
             return SPELL_MISS_MISS;
     }
@@ -3218,12 +3221,6 @@ SpellMissInfo Unit::MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell)
     // Chance hit from victim SPELL_AURA_MOD_ATTACKER_SPELL_HIT_CHANCE auras
     modHitChance+= pVictim->GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_ATTACKER_SPELL_HIT_CHANCE, schoolMask);
 
-    // Cloak of Shadows - should be ignored by Chaos Bolt
-    // handling of CoS aura is wrong? should be resist, not miss
-    if (spell->SpellFamilyName == SPELLFAMILY_WARLOCK && spell->SpellIconID == 3178)
-        if (Aura *aura = pVictim->GetAura(31224, EFFECT_INDEX_0))
-            modHitChance -= aura->GetModifier()->m_amount;
-
     // Reduce spell hit chance for Area of effect spells from victim SPELL_AURA_MOD_AOE_AVOIDANCE aura
     if (IsAreaOfEffectSpell(spell))
         modHitChance-=pVictim->GetTotalAuraModifier(SPELL_AURA_MOD_AOE_AVOIDANCE);
@@ -3260,7 +3257,7 @@ SpellMissInfo Unit::MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell)
     if (HitChance <  100) HitChance =  100;
     if (HitChance > 10000) HitChance = 10000;
 
-    int32 tmp = 10000 - HitChance;
+    int32 tmp = spell->AttributesEx3 & SPELL_ATTR_EX3_CANT_MISS ? 0 : (10000 - HitChance);
 
     int32 rand = irand(0,10000);
 
@@ -7573,7 +7570,7 @@ bool Unit::IsImmuneToSpell(SpellEntry const* spellInfo)
         for(AuraList::const_iterator iter = immuneAuraApply.begin(); iter != immuneAuraApply.end(); ++iter)
             if ((*iter)->GetModifier()->m_miscvalue & (1 << (mechanic-1)))
             {
-                if((*iter)->GetId() == 46924 && (1 << (mechanic-1) == 4)) // Hack to remove Bladestorm disarm immunity
+                if((*iter)->GetId() == 46924 && mechanic == MECHANIC_DISARM) // Hack to remove Bladestorm disarm immunity
                     continue;
             
                 return true;
@@ -7601,8 +7598,16 @@ bool Unit::IsImmuneToSpellEffect(SpellEntry const* spellInfo, SpellEffectIndex i
 
         AuraList const& immuneAuraApply = GetAurasByType(SPELL_AURA_MECHANIC_IMMUNITY_MASK);
         for(AuraList::const_iterator iter = immuneAuraApply.begin(); iter != immuneAuraApply.end(); ++iter)
+        {
             if ((*iter)->GetModifier()->m_miscvalue & (1 << (mechanic-1)))
+            {
+                // Bladestorm exception (Psychic Horror check here)
+                if ((*iter)->GetId() == 46924 && mechanic == MECHANIC_DISARM)
+                    continue;
+
                 return true;
+            }
+        }
     }
 
     if(uint32 aura = spellInfo->EffectApplyAuraName[index])
@@ -7626,7 +7631,7 @@ bool Unit::IsImmuneToSpellEffect(SpellEntry const* spellInfo, SpellEffectIndex i
                 spellInfo->Mechanic & (*i)->GetMiscValue()) ||
                 ((*i)->GetId() == 46924 &&                                                // Bladestorm Immunity
                 spellInfo->EffectMechanic[index] & IMMUNE_TO_MOVEMENT_IMPAIRMENT_AND_LOSS_CONTROL_MASK ||
-                spellInfo->Mechanic & IMMUNE_TO_MOVEMENT_IMPAIRMENT_AND_LOSS_CONTROL_MASK))
+                ((1 << (spellInfo->Mechanic - 1)) & IMMUNE_TO_MOVEMENT_IMPAIRMENT_AND_LOSS_CONTROL_MASK)))
                 {
                 // Additional Bladestorm Immunity check (not immuned to disarm / bleed)
                  if((*i)->GetId() == 46924 && (spellInfo->Mechanic == MECHANIC_DISARM || spellInfo->Mechanic == MECHANIC_BLEED || spellInfo->Mechanic  == MECHANIC_INFECTED))

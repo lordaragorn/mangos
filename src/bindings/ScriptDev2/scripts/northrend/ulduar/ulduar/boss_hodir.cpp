@@ -383,13 +383,13 @@ struct MANGOS_DLL_DECL mob_icicleAI : public ScriptedAI
         {
             case NPC_ICICLE:
                 m_creature->SetDisplayId(28470);
-                m_uiActionTimer = 1000;
+                m_uiActionTimer = 2000;
                 m_uiSpellId = m_bIsRegularMode ? SPELL_ICICLE_DAMAGE : SPELL_ICICLE_DAMAGE_H;
                 break;
             case NPC_SNOW_ICICLE:
                 m_creature->SetDisplayId(28470);
                 m_uiSpellId = SPELL_ICICLE_SNOWDRIFT;
-                m_uiActionTimer = 4000;
+                m_uiActionTimer = 3000;
                 // summon marker for Safe Area
                 m_creature->GetPosition(x, y, z);
                 m_creature->SummonCreature(NPC_SNOWDRIFT_TARGET, x, y, z, 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 10000);

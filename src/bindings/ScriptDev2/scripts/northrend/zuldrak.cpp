@@ -406,4 +406,10 @@ void AddSC_zuldrak()
     pNewScript->GetAI = &GetAI_mob_crusader_trigger;
     pNewScript->RegisterSelf();
 
+    pNewScript = new Script;
+    pNewScript->Name = "npc_ghoul_feeding_bunny";
+    pNewScript->GetAI = &GetAI_npc_ghoul_feeding_bunny;
+    pNewScript->RegisterSelf();
+
+
 }
