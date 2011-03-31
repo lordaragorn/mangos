@@ -841,7 +841,7 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
                 else // Victory at second round
                 {
                     RoundScores[1].winner = player->GetTeam() == BG_TEAM_ALLIANCE ? ALLIANCE : HORDE;
-                    RoundScores[1].time = m_uiRoundElapsedTimer;
+                    RoundScores[1].time = m_uiRoundElapsedTimer - (BG_SA_ROUNDLENGTH - RoundScores[0].time);
                     SendWarningToAll(player->GetTeam() == ALLIANCE ? LANG_BG_SA_ALLIANCE_END_2ROUND : LANG_BG_SA_HORDE_END_2ROUND);
                     RewardHonorToTeam(150, (teamIndex == 0) ? ALLIANCE:HORDE);
                     RewardReputationToTeam((teamIndex == 0) ? 1050:1085, 100, (teamIndex == 0) ? ALLIANCE:HORDE);
